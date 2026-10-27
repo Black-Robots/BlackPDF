@@ -1,5 +1,5 @@
 ; Instalador de BlackPDF para Windows (Inno Setup 6.7).
-; Compilar: ISCC.exe /DMyAppVersion=1.2.0 /DSourceDir=..\..\build\dist-win\BlackPDF BlackPDF.iss
+; Compilar: ISCC.exe /DMyAppVersion=1.3.0 /DSourceDir=..\..\build\dist-win\BlackPDF BlackPDF.iss
 ; Firmar (cuando haya certificado): ISCC.exe /Ssigntool="signtool.exe sign /fd sha256 ... $f" /DSignTool=signtool ...
 ;
 ; Actualizar: el mismo AppId instala encima de la versión anterior (misma carpeta, mismas opciones)
@@ -8,7 +8,7 @@
 ; cierra BlackPDF si está abierto, actualiza y lo vuelve a abrir.
 
 #ifndef MyAppVersion
-  #define MyAppVersion "1.2.0"
+  #define MyAppVersion "1.3.0"
 #endif
 #ifndef SourceDir
   #define SourceDir "..\..\build\dist-win\BlackPDF"

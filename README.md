@@ -68,7 +68,7 @@ Available for **Windows 10/11** and **Linux**, in English, Spanish, Portuguese a
 
 **3D models**
 - Insert STEP, IGES, STL, OBJ, 3MF, glTF, PRC or U3D parts into a PDF as an interactive 3D view, in a box or on a new page.
-- Measure distances, angles and radii in the 3D viewer, snapping to corners and edges, with the file's units when it has them.
+- Measure in the 3D viewer like in a CAD program: the cursor recognises corners, edges, circles, arcs and faces; one click shows a length, diameter, radius or area, two show the distance between them or between hole centres, the thickness between parallel faces, the angle and the X/Y/Z offsets, with the file's units when it has them.
 - 3D viewer for PDFs with U3D and PRC models (Acrobat, Tetra4D, CAD exports, LaTeX/media9) and for standalone `.u3d` and `.prc` files.
 - Views saved in the PDF, rotate, pan and zoom to the cursor, standard views, solid, outline, wireframe and transparent modes, lighting, section plane, parts panel to hide or isolate parts, and export to an image.
 - Own U3D reader in Python. PRC uses nanoPRC (including compressed tessellation) plus an own reader for exact geometry (B-rep, NURBS and Bézier surfaces from Asymptote).

@@ -12,11 +12,13 @@ Available in English, Spanish, Portuguese and French.
 The Windows installer is not code-signed yet: if SmartScreen shows a warning, click **More info** and **Run anyway**.
 `SHA256SUMS.txt` contains the checksums of every file.
 
-### What's new in 1.2.0
+### What's new in 1.3.0
 
-- **Measure in the 3D viewer**: distances (with how far they go along X, Y and Z), angles, and the radius and
-  diameter of holes and cylinders. The cursor snaps to the corners and edges you see, also on the rim of a hole.
-  Units come from the file (STEP, IGES, glTF, 3MF...) or you choose them. Saved images include the measurements.
+- **Measure in the 3D viewer, like in a CAD program**: move the cursor over the part and it recognises what is
+  underneath: a corner, an edge, a circle or an arc, or a face. Click once to see its length, diameter, radius or
+  area. Click a second one to see the distance between them, between the centres of two holes, the thickness
+  between parallel faces, the angle and how far apart they are along X, Y and Z. Units come from the file
+  (STEP, IGES, glTF, 3MF...) or you choose them. Saved images include the measurements.
 
 ### New in 1.1.0
 
@@ -51,11 +53,13 @@ The Windows installer is not code-signed yet: if SmartScreen shows a warning, cl
 Disponible en español, inglés, portugués y francés. El instalador de Windows aún no está firmado: si SmartScreen muestra un aviso,
 pulsa **Más información** y **Ejecutar de todas formas**.
 
-**Novedades de la 1.2.0**
+**Novedades de la 1.3.0**
 
-- **Medir en el visor 3D**: distancias (con lo que avanzan en X, Y y Z), ángulos, y el radio y el diámetro de
-  agujeros y cilindros. El cursor se pega a las esquinas y aristas que ves, también en el borde de un agujero.
-  Las unidades salen del archivo (STEP, IGES, glTF, 3MF...) o las eliges tú. La imagen guardada lleva las medidas.
+- **Medir en el visor 3D como en un programa de CAD**: al pasar el cursor por la pieza reconoce lo que hay
+  debajo: una esquina, una arista, una circunferencia o un arco, o una cara. Con un clic ves su longitud,
+  diámetro, radio o área. Con un segundo, la distancia entre los dos, entre los centros de dos agujeros, el
+  espesor entre caras paralelas, el ángulo y lo que se separan en X, Y y Z. Las unidades salen del archivo
+  (STEP, IGES, glTF, 3MF...) o las eliges tú. La imagen guardada lleva las medidas.
 
 **Llegó en la 1.1.0**
 
