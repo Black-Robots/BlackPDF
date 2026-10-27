@@ -68,6 +68,7 @@ Disponible para **Windows 10/11** y **Linux**, en español, inglés, portugués 
 
 **Modelos 3D**
 - Meter piezas STEP, IGES, STL, OBJ, 3MF, glTF, PRC o U3D en un PDF como vista 3D interactiva, en un recuadro o en una página nueva.
+- Medir distancias, ángulos y radios en el visor 3D, pegándose a esquinas y aristas, con las unidades del archivo cuando las trae.
 - Visor 3D para los PDF con modelos U3D y PRC (Acrobat, Tetra4D, exportaciones CAD, LaTeX/media9) y para archivos `.u3d` y `.prc` sueltos.
 - Vistas guardadas en el PDF, giro, desplazamiento y zoom al cursor, vistas estándar, modos sólido, contorno, alámbrico y transparente, iluminación, corte por plano, panel de piezas para ocultar o aislar, y captura a imagen.
 - Lector U3D propio en Python. El PRC usa nanoPRC (incluida teselación comprimida) con un lector propio de respaldo.

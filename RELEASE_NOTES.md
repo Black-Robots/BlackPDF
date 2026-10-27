@@ -12,7 +12,14 @@ Available in English, Spanish, Portuguese and French.
 The Windows installer is not code-signed yet: if SmartScreen shows a warning, click **More info** and **Run anyway**.
 `SHA256SUMS.txt` contains the checksums of every file.
 
-### What's new in 1.1.0
+### What's new in 1.2.0
+
+- **Measure in the 3D viewer**: distances (with how far they go along X, Y and Z), angles, and the radius and
+  diameter of holes and cylinders. The cursor snaps to the corners and edges you see, also on the rim of a hole.
+  Units come from the file (STEP, IGES, glTF, 3MF...) or you choose them. Saved images include the measurements.
+
+### New in 1.1.0
+
 
 - **Attachments**: see, open, save, add and remove the files a PDF carries inside, such as a 3D part or a
   spreadsheet sent along with a drawing. A paperclip with a counter tells you they are there.
@@ -44,7 +51,13 @@ The Windows installer is not code-signed yet: if SmartScreen shows a warning, cl
 Disponible en español, inglés, portugués y francés. El instalador de Windows aún no está firmado: si SmartScreen muestra un aviso,
 pulsa **Más información** y **Ejecutar de todas formas**.
 
-**Novedades de la 1.1.0**
+**Novedades de la 1.2.0**
+
+- **Medir en el visor 3D**: distancias (con lo que avanzan en X, Y y Z), ángulos, y el radio y el diámetro de
+  agujeros y cilindros. El cursor se pega a las esquinas y aristas que ves, también en el borde de un agujero.
+  Las unidades salen del archivo (STEP, IGES, glTF, 3MF...) o las eliges tú. La imagen guardada lleva las medidas.
+
+**Llegó en la 1.1.0**
 
 - **Archivos adjuntos**: ver, abrir, guardar, añadir y quitar los archivos que lleva un PDF dentro, como una pieza
   en 3D o una hoja de cálculo enviadas con un plano. Un clip con el número avisa de que están ahí.
