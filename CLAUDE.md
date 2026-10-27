@@ -18,7 +18,7 @@ blackpdf/app.py  → punto de entrada.
 tests/           → tests de core con PDFs generados en el propio test.
 ```
 - Cada herramienta = función en `core` (entrada: rutas o `fitz.Document`, salida: documento/archivo) + diálogo en `ui`.
-- Operaciones largas fuera del hilo de la UI con barra de progreso: un `QRunnable` del `QThreadPool` supervisa un subproceso (`procworker`), porque PyMuPDF se inicializa en modo monohilo y no es seguro usarlo desde varios hilos. El render del visor va troceado en el hilo de la UI.
+- Operaciones largas fuera del hilo de la UI con barra de progreso: un `QRunnable` del `QThreadPool` supervisa un subproceso (`procworker`), porque PyMuPDF se inicializa en modo monohilo y no es seguro usarlo desde varios hilos. El render del visor va troceado en el hilo de la UI. El análisis de piezas para medir en 3D (`core/model3d/topology.py`, Python puro sin PyMuPDF) va en un hilo propio.
 - Coordenadas: `core/annotations.py` y la UI trabajan en coordenadas *visibles* (`page.rect`); la conversión a PDF sin rotar se hace en core con `derotation_matrix`.
 - Deshacer/rehacer en el editor (snapshot `doc.tobytes()` por operación, máx. 30).
 - Nunca sobrescribir el original sin "Guardar"; "Guardar como" por defecto en herramientas.

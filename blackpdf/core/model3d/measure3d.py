@@ -10,9 +10,12 @@ from __future__ import annotations
 import math
 from array import array
 from collections.abc import Iterable
+from dataclasses import dataclass
+from typing import NamedTuple
 
 from ..errors import InvalidOptionError
 from .scene import Scene, transform_point
+from .topology import BoxTree, Curve, Face, closest_between
 
 Vec = tuple[float, float, float]
 
@@ -22,6 +25,8 @@ POINTS_NEEDED = {"distance": 2, "angle": 3, "radius": 3}
 MAX_SEGMENTS = 200_000
 MAX_VERTICES = 200_000
 """Aristas y esquinas que se indexan como mucho; en modelos enormes el resto se mide sobre la superficie."""
+CORNER_ANGLE = 50.0
+"""Giro a partir del cual el punto donde se juntan dos aristas es una esquina (como en topology)."""
 LEVELS = (1, 4, 16, 64)
 """Tamaños de las rejillas, en celdas de la más fina (que mide 1/64 de la diagonal de la escena)."""
 
@@ -29,6 +34,10 @@ LEVELS = (1, 4, 16, 64)
 # ---------- geometría ----------
 def _sub(a: Vec, b: Vec) -> Vec:
     return a[0] - b[0], a[1] - b[1], a[2] - b[2]
+
+
+def _scale(a: Vec, k: float) -> Vec:
+    return a[0] * k, a[1] * k, a[2] * k
 
 
 def _dot(a: Vec, b: Vec) -> float:
@@ -117,6 +126,14 @@ def _floats(data: bytes) -> array:
     return values
 
 
+class Snap(NamedTuple):
+    point: Vec
+    kind: str
+    """«vertex» (una esquina) o «edge» (un punto de una arista)."""
+    segment: int = -1
+    """En las aristas, cuál (para saber de qué curva y pieza es)."""
+
+
 class SnapIndex:
     """Esquinas y aristas visibles de la escena, en rejillas, para pegar el cursor a ellas.
 
@@ -139,10 +156,14 @@ class SnapIndex:
         self.vertices: dict[tuple[int, int, int], list[Vec]] = {}
         self.segments: dict[tuple[int, int, int], list[int]] = {}
         self.lines: list[tuple[Vec, Vec]] = []
+        self.owner: list[int] = []
+        """Pieza de cada arista."""
         self.truncated = False
         """El modelo tenía más esquinas o aristas de las que se indexan: el resto se mide sobre la superficie."""
         self._vertex_count = 0
         self._levels: dict[int, tuple[dict, dict]] = {1: (self.vertices, self.segments)}
+        self._ends: dict[Vec, list[Vec]] = {}
+        """Para cada extremo de arista, los otros extremos: para saber si es una esquina de verdad."""
         seen_vertices: set[Vec] = set()
         for index, part in enumerate(scene.parts):
             if index in hidden or not part.visible:
@@ -163,10 +184,35 @@ class SnapIndex:
                           for i in range(0, len(values) - 2, 3)]
                 if pairs:
                     for start in range(0, len(points) - 1, 2):
-                        self._add_segment(points[start], points[start + 1], seen_vertices)
+                        self._add_segment(points[start], points[start + 1], seen_vertices, index)
                 else:
                     for point in points:
                         self._add_vertex(point, seen_vertices)
+        self._keep_corners()
+
+    def _keep_corners(self) -> None:
+        """Solo cuentan como esquinas las de verdad: donde se juntan aristas o donde giran de golpe.
+
+        Los puntos intermedios de la malla sobre una circunferencia o un arco no son esquinas
+        (en un CAD no lo son): si contaran, el cursor no podría elegir la circunferencia.
+        """
+        limit = math.cos(math.radians(CORNER_ANGLE))
+        for key, items in list(self.vertices.items()):
+            kept = []
+            for p in items:
+                others = self._ends.get(p)
+                if others is None or len(others) != 2:
+                    kept.append(p)
+                    continue
+                u, v = _sub(p, others[0]), _sub(others[1], p)
+                lu, lv = _length(u), _length(v)
+                if lu == 0 or lv == 0 or _dot(u, v) / (lu * lv) < limit:
+                    kept.append(p)
+            if kept:
+                self.vertices[key] = kept
+            else:
+                del self.vertices[key]
+        self._ends = {}
 
     def _key(self, p: Vec, level: int = 1) -> tuple[int, int, int]:
         h = self.cell * level
@@ -180,12 +226,15 @@ class SnapIndex:
         self._vertex_count += 1
         self.vertices.setdefault(self._key(p), []).append(p)
 
-    def _add_segment(self, a: Vec, b: Vec, seen: set[Vec]) -> None:
+    def _add_segment(self, a: Vec, b: Vec, seen: set[Vec], part: int = -1) -> None:
         if a == b:
             self._add_vertex(a, seen)
             return
         index = len(self.lines)
         self.lines.append((a, b))
+        self.owner.append(part)
+        self._ends.setdefault(a, []).append(b)
+        self._ends.setdefault(b, []).append(a)
         self._add_vertex(a, seen)
         self._add_vertex(b, seen)
         steps = max(1, int(math.ceil(distance(a, b) / (self.cell * 0.5))))
@@ -256,7 +305,7 @@ class SnapIndex:
 
     def snap_ray(self, origin: Vec, direction: Vec, near: float, growth: float,
                  hit: float | None = None, clip: tuple[float, float, float, float] | None = None
-                 ) -> tuple[Vec, str] | None:
+                 ) -> Snap | None:
         """Esquina o arista que se ve junto al rayo que sale del cursor, o None.
 
         Se mide en pantalla: la tolerancia a una distancia ``t`` del origen es ``near + growth * t``
@@ -315,13 +364,14 @@ class SnapIndex:
             if current is not None and (best_rank is None or current < best_rank):
                 best, best_rank = vertex, current
         if best is not None:
-            return best, "vertex"
+            return Snap(best, "vertex")
+        best_segment = -1
         for index in segments:
             closest = self._segment_near_ray(self.lines[index], origin, d)
             current = rank(closest)
             if current is not None and (best_rank is None or current < best_rank):
-                best, best_rank = closest, current
-        return (best, "edge") if best is not None else None
+                best, best_rank, best_segment = closest, current, index
+        return Snap(best, "edge", best_segment) if best is not None else None
 
     def _ray_span(self, origin: Vec, d: Vec, margin: float) -> tuple[float, float] | None:
         """Tramo del rayo dentro de la caja de la escena agrandada en ``margin``."""
@@ -349,3 +399,180 @@ class SnapIndex:
         s = (ud * dw - uw) / denominator if denominator > 1e-20 else 0.0
         s = max(0.0, min(1.0, s))
         return a[0] + u[0] * s, a[1] + u[1] * s, a[2] + u[2] * s
+
+
+# ---------- medir como un CAD: lo que se selecciona y la relación entre dos selecciones ----------
+@dataclass
+class Entity:
+    """Lo que se elige al medir: una esquina, una arista (recta, circunferencia, arco...) o una cara."""
+
+    kind: str
+    """«vertex», «point» (un punto de una superficie), «line», «circle», «arc», «curve», «plane»,
+    «cylinder» o «face»."""
+    point: Vec
+    """La esquina, o el punto donde se hizo clic."""
+    curve: Curve | None = None
+    face: Face | None = None
+    key: tuple = ()
+    """Identifica la arista o cara (pieza, tipo, índice): para no medir algo consigo mismo."""
+
+
+@dataclass
+class Relation:
+    distance: float
+    """Distancia mínima entre las dos selecciones (entre caras paralelas, la perpendicular)."""
+    anchors: tuple[Vec, Vec]
+    """Puntos entre los que se dibuja la medida principal."""
+    delta: Vec
+    center_distance: float | None = None
+    angle: float | None = None
+    parallel: bool = False
+
+
+def entity_from_curve(curve: Curve, point: Vec, key: tuple = ()) -> Entity:
+    return Entity(curve.kind, point, curve=curve, key=key)
+
+
+def entity_from_face(face: Face, point: Vec, key: tuple = ()) -> Entity:
+    return Entity(face.kind, point, face=face, key=key)
+
+
+def describe(entity: Entity) -> dict[str, object]:
+    """Datos de una selección: posición, longitud, diámetro, radio, área..."""
+    kind = entity.kind
+    if kind in ("vertex", "point"):
+        return {"position": entity.point}
+    if entity.curve is not None:
+        curve = entity.curve
+        if kind == "circle":
+            return {"diameter": 2 * curve.radius, "radius": curve.radius, "center": curve.center}
+        if kind == "arc":
+            return {"radius": curve.radius, "sweep": curve.sweep, "length": curve.length, "center": curve.center}
+        return {"length": curve.length}
+    if entity.face is not None:
+        face = entity.face
+        if kind == "cylinder":
+            return {"diameter": 2 * face.radius, "radius": face.radius, "area": face.area}
+        return {"area": face.area}
+    return {}
+
+
+def _tree(entity: Entity) -> BoxTree:
+    if entity.curve is not None:
+        return entity.curve.tree()
+    if entity.face is not None:
+        return entity.face.tree()
+    return BoxTree([(entity.point,)])
+
+
+def min_distance(a: Entity, b: Entity) -> tuple[float, Vec, Vec]:
+    """Distancia mínima entre dos selecciones y los puntos donde se da (cero si se tocan o se cortan)."""
+    found = closest_between(_tree(a), _tree(b))
+    return found if found is not None else (distance(a.point, b.point), a.point, b.point)
+
+
+def _axis(entity: Entity) -> tuple[Vec, Vec] | None:
+    """Centro y dirección del eje de una circunferencia, un arco o un cilindro."""
+    if entity.curve is not None and entity.curve.center is not None:
+        return entity.curve.center, entity.curve.normal
+    if entity.face is not None and entity.face.kind == "cylinder":
+        return entity.face.point, entity.face.axis
+    return None
+
+
+def _direction(entity: Entity) -> tuple[Vec, str] | None:
+    """Dirección que cuenta para el ángulo: la de una recta o un eje, o la normal de un plano."""
+    if entity.kind == "line":
+        u = _unit(_sub(entity.curve.points[-1], entity.curve.points[0]))
+        return (u, "line") if u else None
+    if entity.kind == "plane":
+        return entity.face.normal, "normal"
+    # Una circunferencia o un arco están en un plano: cuenta como él (0° con su cara, 90° con su eje).
+    if entity.kind in ("circle", "arc"):
+        return entity.curve.normal, "normal"
+    axis = _axis(entity)
+    return (axis[1], "line") if axis else None
+
+
+def _unit(v: Vec) -> Vec | None:
+    length = _length(v)
+    return None if length < 1e-30 else (v[0] / length, v[1] / length, v[2] / length)
+
+
+def _point_on_line(p: Vec, origin: Vec, direction: Vec) -> Vec:
+    t = _dot(_sub(p, origin), direction)
+    return origin[0] + direction[0] * t, origin[1] + direction[1] * t, origin[2] + direction[2] * t
+
+
+def _lines_closest(o1: Vec, d1: Vec, o2: Vec, d2: Vec, near: Vec) -> tuple[Vec, Vec]:
+    """Puntos más cercanos entre dos rectas infinitas (si son paralelas, a la altura de ``near``)."""
+    b = _dot(d1, d2)
+    denominator = 1 - b * b
+    if denominator < 1e-9:
+        p1 = _point_on_line(near, o1, d1)
+        return p1, _point_on_line(p1, o2, d2)
+    w = _sub(o1, o2)
+    d, e = _dot(d1, w), _dot(d2, w)
+    s, t = (b * e - d) / denominator, (e - b * d) / denominator
+    return ((o1[0] + d1[0] * s, o1[1] + d1[1] * s, o1[2] + d1[2] * s),
+            (o2[0] + d2[0] * t, o2[1] + d2[1] * t, o2[2] + d2[2] * t))
+
+
+def relate(a: Entity, b: Entity) -> Relation:
+    """Lo que hay entre dos selecciones: distancia, entre centros, ángulo y avance en cada eje."""
+    relation = Relation(0.0, (a.point, b.point), (0.0, 0.0, 0.0))
+
+    # Ángulo entre rectas, ejes y normales de planos (siempre el agudo, de 0° a 90°).
+    da, db = _direction(a), _direction(b)
+    if da and db:
+        cosine = abs(_dot(da[0], db[0]))
+        acute = math.degrees(math.acos(max(-1.0, min(1.0, cosine))))
+        relation.angle = 90.0 - acute if da[1] != db[1] else acute
+        relation.parallel = relation.angle < 0.05
+
+    # Entre caras planas paralelas, o de un punto a un plano: la perpendicular (el espesor).
+    # Si no, la distancia mínima de verdad entre las dos.
+    plane_a = a.face if a.kind == "plane" else None
+    plane_b = b.face if b.kind == "plane" else None
+    if plane_a and plane_b and relation.parallel:
+        gap = abs(_dot(_sub(b.point, a.point), plane_a.normal))
+        foot = _sub(a.point, _scale(plane_a.normal, _dot(_sub(a.point, b.point), plane_a.normal)))
+        relation.distance, relation.anchors = gap, (a.point, foot)
+    elif plane_b and a.kind in ("vertex", "point"):
+        gap = _dot(_sub(a.point, b.point), plane_b.normal)
+        relation.distance, relation.anchors = abs(gap), (a.point, _sub(a.point, _scale(plane_b.normal, gap)))
+    elif plane_a and b.kind in ("vertex", "point"):
+        gap = _dot(_sub(b.point, a.point), plane_a.normal)
+        relation.distance, relation.anchors = abs(gap), (_sub(b.point, _scale(plane_a.normal, gap)), b.point)
+    else:
+        dist, pa, pb = min_distance(a, b)
+        relation.distance, relation.anchors = dist, (pa, pb)
+
+    # Entre centros: circunferencias, arcos y cilindros (por su eje), o una esquina y un centro.
+    axis_a, axis_b = _axis(a), _axis(b)
+    is_point = ("vertex", "point")
+    if axis_a and axis_b:
+        a_is_circle, b_is_circle = a.curve is not None, b.curve is not None
+        if a_is_circle and b_is_circle:
+            ca, cb = axis_a[0], axis_b[0]
+        elif a_is_circle:
+            ca = axis_a[0]
+            cb = _point_on_line(ca, *axis_b)
+        elif b_is_circle:
+            cb = axis_b[0]
+            ca = _point_on_line(cb, *axis_a)
+        else:
+            ca, cb = _lines_closest(axis_a[0], axis_a[1], axis_b[0], axis_b[1], a.point)
+        relation.center_distance = distance(ca, cb)
+        relation.anchors, relation.delta = (ca, cb), deltas(ca, cb)
+    elif axis_a and b.kind in is_point:
+        ca = axis_a[0] if a.curve is not None else _point_on_line(b.point, *axis_a)
+        relation.center_distance = distance(ca, b.point)
+        relation.anchors, relation.delta = (ca, b.point), deltas(ca, b.point)
+    elif axis_b and a.kind in is_point:
+        cb = axis_b[0] if b.curve is not None else _point_on_line(a.point, *axis_b)
+        relation.center_distance = distance(a.point, cb)
+        relation.anchors, relation.delta = (a.point, cb), deltas(a.point, cb)
+    else:
+        relation.delta = deltas(*relation.anchors)
+    return relation

@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QFileDialog,
     QFrame,
+    QGridLayout,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -248,39 +249,48 @@ class PartsPanel(QFrame):
             self.focusRequested.emit(row)
 
 
-class _MeasureBar(FloatingPanel):
-    """Controles de medir: qué se mide, en qué unidad y el resultado."""
+class _MeasurePanel(FloatingPanel):
+    """Cuadro de medir, como el de los programas de CAD: lo elegido, sus datos y lo que hay entre ambos."""
 
-    modeChanged = Signal(str)
     unitChanged = Signal(str)
     clearRequested = Signal()
     closed = Signal()
 
     def __init__(self, parent: QWidget):
-        super().__init__(parent, inner=(8, 6, 8, 6))
-        layout = QHBoxLayout(self)
+        super().__init__(parent, inner=(12, 10, 12, 10))
+        self.setFixedWidth(theme.space(84))
+        layout = QVBoxLayout(self)
         self.apply_margins(layout)
         layout.setSpacing(theme.space(2))
+        header = QHBoxLayout()
+        header.setSpacing(theme.space(2))
         icon = QLabel(self)
         icon.setPixmap(icons.pixmap("ruler", 18, dpr=self.devicePixelRatioF()))
-        layout.addWidget(icon)
-        self.modes = SegmentedControl(list(measure3d.mode_names().items()), self)
-        self.modes.changed.connect(self.modeChanged)
-        layout.addWidget(self.modes)
+        header.addWidget(icon)
+        header.addWidget(label(self.tr("Medir"), "cardtitle"), 1)
+        close = IconButton("x", self.tr("Dejar de medir (Esc)"), self, size=28, icon_size=14)
+        close.clicked.connect(self.closed)
+        header.addWidget(close)
+        layout.addLayout(header)
+        self.body = QWidget(self)
+        self.grid = QGridLayout(self.body)
+        self.grid.setContentsMargins(0, 0, 0, 0)
+        self.grid.setHorizontalSpacing(theme.space(3))
+        self.grid.setVerticalSpacing(theme.space(1))
+        layout.addWidget(self.body)
+        self.hint = label("", "muted", wrap=True)
+        layout.addWidget(self.hint)
+        footer = QHBoxLayout()
         self.unit = QComboBox(self)
         for name in core_measure3d.UNITS_MM:
             self.unit.addItem(name, name)
         self.unit.currentIndexChanged.connect(lambda _row: self.unitChanged.emit(self.unit.currentData()))
-        layout.addWidget(self.unit)
-        self.readout = label("", "")
-        self.readout.setMinimumWidth(theme.space(80))
-        layout.addWidget(self.readout, 1)
-        self.clear_button = IconButton("trash-2", self.tr("Borrar las medidas"), self)
+        footer.addWidget(self.unit)
+        footer.addStretch(1)
+        self.clear_button = Button(self.tr("Borrar medidas"), "ghost", "trash-2", self)
         self.clear_button.clicked.connect(self.clearRequested)
-        layout.addWidget(self.clear_button)
-        close = IconButton("x", self.tr("Dejar de medir"), self)
-        close.clicked.connect(self.closed)
-        layout.addWidget(close)
+        footer.addWidget(self.clear_button)
+        layout.addLayout(footer)
 
     def set_unit(self, unit: str, known: bool) -> None:
         self.unit.blockSignals(True)
@@ -289,18 +299,47 @@ class _MeasureBar(FloatingPanel):
         self.unit.setToolTip(self.tr("Unidad en la que se muestran las medidas") if known else self.tr(
             "El archivo no dice en qué unidades está el modelo: elige la suya"))
 
-    def show_text(self, text: str) -> None:
-        self.readout.setText(text)
+    def show_content(self, sections: list[tuple[str, list[tuple[str, str]]]], hint: str) -> None:
+        """Cada sección: un título («1 · Circunferencia») y sus filas (nombre, valor)."""
+        while self.grid.count():
+            item = self.grid.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                # Fuera ya (no solo «más tarde»): si no, lo viejo se solapa con lo nuevo.
+                widget.hide()
+                widget.setParent(None)
+                widget.deleteLater()
+        row = 0
+        for title, rows in sections:
+            if row:
+                self.grid.addWidget(separator(), row, 0, 1, 2)
+                row += 1
+            heading = label(title, "")
+            heading.setStyleSheet("font-weight: 600;")
+            self.grid.addWidget(heading, row, 0, 1, 2)
+            row += 1
+            for name, value in rows:
+                self.grid.addWidget(label(name, "muted"), row, 0)
+                shown = label(value, "")
+                shown.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+                shown.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+                self.grid.addWidget(shown, row, 1)
+                row += 1
+        self.body.setVisible(bool(sections))
+        # Visibles ya: si Qt los muestra más tarde, el tamaño se calcula sin ellos y el cuadro no crece.
+        for index in range(self.grid.count()):
+            self.grid.itemAt(index).widget().show()
+        self.hint.setText(hint)
+        self.hint.setVisible(bool(hint))
+        self.grid.invalidate()
+        self.layout().activate()
         self.adjustSize()
 
-    def reposition(self, above: QWidget | None = None) -> None:
+    def reposition(self) -> None:
         parent = self.parentWidget()
         if parent is not None:
             self.adjustSize()
-            bottom = parent.height() - theme.space(2)
-            if above is not None and above.isVisible():
-                bottom = above.y() - theme.space(1)
-            self.move((parent.width() - self.width()) // 2, bottom - self.height())
+            self.move(parent.width() - self.width() - theme.space(2), theme.space(2))
 
 
 class Model3DWindow(QWidget):
@@ -350,9 +389,8 @@ class Model3DWindow(QWidget):
         self.section_bar.closed.connect(lambda: self.section_button.setChecked(False))
         self.measure = measure3d.Measure3D(self.viewer, self)
         self.measure.changed.connect(self._measure_changed)
-        self.measure_bar = _MeasureBar(self.stage)
+        self.measure_bar = _MeasurePanel(self.stage)
         self.measure_bar.hide()
-        self.measure_bar.modeChanged.connect(self.measure.set_mode)
         self.measure_bar.unitChanged.connect(self.measure.set_unit)
         self.measure_bar.clearRequested.connect(self.measure.clear)
         self.measure_bar.closed.connect(lambda: self.measure_button.setChecked(False))
@@ -668,7 +706,7 @@ class Model3DWindow(QWidget):
         else:
             self.viewer.set_section(None)
         if self.measure_bar.isVisible():
-            self.measure_bar.reposition(self.section_bar)
+            self.measure_bar.reposition()
 
     def _toggle_measure(self, enabled: bool) -> None:
         self.measure_bar.setVisible(enabled)
@@ -676,7 +714,7 @@ class Model3DWindow(QWidget):
         if enabled:
             self.viewer.setCursor(Qt.CursorShape.CrossCursor)
             self._measure_changed()
-            self.measure_bar.reposition(self.section_bar)
+            self.measure_bar.reposition()
             self.measure_bar.raise_()
         else:
             self.measure.cancel()
@@ -685,16 +723,24 @@ class Model3DWindow(QWidget):
         self.viewer.update()
 
     def _measure_changed(self) -> None:
-        if self.measure.notice:
-            text = self.measure.notice
-        elif self.measure.results and not self.measure.points:
-            text = self.measure.detail(self.measure.results[-1])
+        names = measure3d.kind_names()
+        measure = self.measure
+        sections = []
+        for number, entity in enumerate(measure.selection, 1):
+            sections.append((f"{number} · {names.get(entity.kind, entity.kind)}", measure.entity_rows(entity)))
+        if measure.relation is not None and len(measure.selection) == 2:
+            sections.append((self.tr("Entre las dos"), measure.relation_rows(measure.relation)))
+        if not measure.selection:
+            hint = self.tr("Pasa el ratón por una esquina, una arista o una cara y haz clic. "
+                           "Después elige otra para medir entre las dos.")
+        elif len(measure.selection) == 1:
+            hint = self.tr("Elige otra esquina, arista o cara para medir entre las dos.")
         else:
-            text = measure3d.mode_hints()[self.measure.mode]
-        self.measure_bar.clear_button.setEnabled(bool(self.measure.results))
-        self.measure_bar.show_text(text)
+            hint = ""
+        self.measure_bar.clear_button.setEnabled(bool(measure.results or measure.selection))
+        self.measure_bar.show_content(sections, hint)
         if self.measure_bar.isVisible():
-            self.measure_bar.reposition(self.section_bar)
+            self.measure_bar.reposition()
 
     def _apply_section(self) -> None:
         axis, offset, flip = self.section_bar.values()
@@ -760,7 +806,7 @@ class Model3DWindow(QWidget):
             if self.section_bar.isVisible():
                 self.section_bar.reposition()
             if self.measure_bar.isVisible():
-                self.measure_bar.reposition(self.section_bar)
+                self.measure_bar.reposition()
         return super().eventFilter(watched, event)
 
     def closeEvent(self, event) -> None:

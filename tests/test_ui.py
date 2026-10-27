@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import os
 import sys
 import time
@@ -1345,38 +1346,37 @@ def test_clicking_the_active_tool_again_goes_back_to_select(qapp, opened):
 
 
 def test_measure_in_3d_viewer(qapp, monkeypatch):
-    """Medir en el visor 3D: sin OpenGL en las pruebas, el punto bajo el ratón se simula."""
+    """Medir como un CAD. Sin OpenGL en las pruebas, lo que hay bajo el ratón se simula."""
     from PySide6.QtGui import QVector3D
 
-    from blackpdf.core.model3d import measure3d as core3d
     from blackpdf.core.model3d import meshes
     from blackpdf.ui.model3d_window import Model3DWindow
-    from tests.test_measure3d import _cube
+    from tests.test_topology import _cylinder
 
-    scene = meshes.parts_scene([_cube()])
-    win = Model3DWindow("cubo.stl")
+    scene = meshes.parts_scene([_cylinder(5.0, 10.0, center=(0, 0), name="A"),
+                                _cylinder(3.0, 10.0, center=(30, 40), name="B")])
+    win = Model3DWindow("piezas.stl")
     win.resize(1200, 760)
     win.show()
     win.set_scene(scene)
     pump(qapp, 0.1)
-    queue: list[tuple[float, float, float]] = []
-    current = {}
+    under = {}
 
-    def pick_point(pos):
-        current["point"] = queue.pop(0) if queue else None
-        return QVector3D(*current["point"]) if current["point"] is not None else None
+    def aim(point, part, side=False):
+        under["point"], under["part"], under["side"] = point, part, side
 
-    def pick_ray(pos):
-        # Como mirar desde arriba (eje Z) justo sobre el punto simulado.
-        if current.get("point") is None:
-            return None
-        x, y, z = current["point"]
-        return QVector3D(x, y, z + 100), QVector3D(0, 0, -1)
+    def ray(pos):
+        # Se mira desde arriba (eje Z) o de lado (eje X), justo hacia el punto que se simula.
+        x, y, z = under["point"]
+        if under["side"]:
+            return QVector3D(100.0, y, z), QVector3D(-1, 0, 0)
+        return QVector3D(x, y, 100.0), QVector3D(0, 0, -1)
 
-    monkeypatch.setattr(win.viewer, "pick_point", pick_point)
-    monkeypatch.setattr(win.viewer, "pick_ray", pick_ray)
-    monkeypatch.setattr(win.viewer, "snap_tolerance", lambda origin, direction, pixels: (0.6, 0.0))
-    monkeypatch.setattr(win.viewer, "project", lambda point: QPointF(point.x() * 10, point.y() * 10))
+    monkeypatch.setattr(win.viewer, "pick_point", lambda pos: QVector3D(*under["point"]))
+    monkeypatch.setattr(win.viewer, "pick_part", lambda pos: under.get("part", -1))
+    monkeypatch.setattr(win.viewer, "pick_ray", ray)
+    monkeypatch.setattr(win.viewer, "snap_tolerance", lambda origin, direction, pixels: (0.1, 0.0))
+    monkeypatch.setattr(win.viewer, "projector", lambda: (lambda p: QPointF(p[0] * 10, p[1] * 10)))
     clicked = []
     win.viewer.partClicked.connect(clicked.append)
 
@@ -1384,54 +1384,72 @@ def test_measure_in_3d_viewer(qapp, monkeypatch):
     assert win.viewer.measure_tool is win.measure and win.measure_bar.isVisibleTo(win)
     assert "no dice en qué unidades" in win.measure_bar.unit.toolTip(), "un STL no trae unidades"
 
-    def click(point):
-        queue.append(point)
+    def click(point, part=0, side=False):
+        aim(point, part, side)
         win.measure.click(QPointF(0, 0))
 
-    click((0.3, 0.2, 10.0))      # cerca de la esquina (0, 0, 10)
-    click((10.1, 0.25, 9.9))     # cerca de la esquina (10, 0, 10)
-    result = win.measure.results[-1]
-    assert result.kind == "distance" and result.points == [(0, 0, 10), (10, 0, 10)] and result.value == 10
-    assert win.measure_bar.readout.text() == win.measure.detail(result)
-    win.measure_bar.unit.setCurrentIndex(win.measure_bar.unit.findData("cm"))
-    assert win.measure.length_text(10) == f"{QLocale().toString(10.0, 'f', 2)} cm", \
-        "sin unidades en el archivo, se elige en qué está el modelo: no se convierte"
+    def rim(radius, center=(0.0, 0.0), z=10.0):
+        # Entre dos vértices de la malla (cada 7,5°): se pega a la arista, no a una esquina.
+        angle = math.radians(3.75)
+        return center[0] + radius * math.cos(angle), center[1] + radius * math.sin(angle), z
 
-    win.measure_bar.modes.set_value("angle")
-    for point in ((10.0, 0.1, 10.0), (0.2, 0.2, 10.0), (0.1, 10.0, 10.0)):
-        click(point)
-    assert win.measure.results[-1].kind == "angle" and abs(win.measure.results[-1].value - 90) < 1e-9
+    # Al pasar por B, sus caras y curvas se analizan en otro hilo: primero es un tramo de la
+    # malla y, al terminar, la circunferencia entera, sin mover el ratón.
+    aim(rim(3.0, (30.0, 40.0)), 1)
+    win.measure.hover_at(QPointF(0, 0))
+    assert wait_until(qapp, lambda: win.measure.hover is not None and win.measure.hover.kind == "circle", 10)
 
-    win.measure_bar.modes.set_value("radius")
-    for point in ((5.0, 5.0, 10.0), (5.0, 5.0, 10.0), (5.0, 5.0, 10.0)):
-        click(point)
-    assert win.measure.results[-1].kind == "angle", "tres puntos iguales no son una circunferencia: se descartan"
-    assert "en línea" in win.measure_bar.readout.text(), "y se avisa"
-    import math as _math
+    # Un clic en el borde de arriba del cilindro A: es una circunferencia y se ve su diámetro.
+    click(rim(5.0))
+    first = win.measure.selection[0]
+    assert first.kind == "circle"
+    rows = dict(win.measure.entity_rows(first))
+    assert rows["Diámetro"] == f"Ø {QLocale().toString(10.0, 'f', 2)} mm"
+    assert not win.measure.results and "Elige otra" in win.measure_bar.hint.text()
+    # El segundo, en el borde de arriba de B: entre centros.
+    click(rim(3.0, (30.0, 40.0)), part=1)
+    relation = win.measure.relation
+    assert relation is not None and abs(relation.center_distance - 50.0) < 1e-6
+    rows = dict(win.measure.relation_rows(relation))
+    assert rows["Entre centros"] == f"{QLocale().toString(50.0, 'f', 2)} mm"
+    assert len(win.measure.results) == 1
 
-    for t in (0.0, 2.0, 4.0):
-        click((5 + 3 * _math.cos(t), 5 + 3 * _math.sin(t), 10.0))
-    radius = win.measure.results[-1]
-    assert radius.kind == "radius" and abs(radius.value - 3) < 1e-6  # el visor da puntos en float32
-    assert abs(core3d.convert(radius.value, 1.0, "cm") - 0.3) < 1e-6
+    # Caras: la de arriba y la de abajo de A son paralelas: el espesor.
+    click((1.0, 1.0, 10.0))
+    assert win.measure.selection[0].kind == "plane" and len(win.measure.selection) == 1, "un tercer clic empieza otra"
+    click((-1.0, 1.0, 0.0))
+    rows = dict(win.measure.relation_rows(win.measure.relation))
+    assert rows["Distancia entre caras"] == f"{QLocale().toString(10.0, 'f', 2)} mm"
+
+    # La pared de A, en el medio: cara cilíndrica.
+    wall = rim(5.0, z=5.0)
+    click(wall, side=True)
+    assert win.measure.selection[0].kind == "cylinder"
+    assert dict(win.measure.entity_rows(win.measure.selection[0]))["Diámetro"].startswith("Ø ")
+    # Lo mismo otra vez la quita.
+    click(wall, side=True)
+    assert not win.measure.selection
 
     # Midiendo, un clic no selecciona piezas.
-    pos = QPointF(200, 200)
     for kind in ("press", "release"):
-        mouse(win.viewer, kind, pos)
+        mouse(win.viewer, kind, QPointF(200, 200))
     assert not clicked
-    # Esc descarta la medida a medias y, con otro Esc, se deja de medir.
+    # Esc quita la selección y, con otro Esc, se deja de medir.
     click((1.0, 1.0, 10.0))
     win._escape()
-    assert not win.measure.points and win.measure_button.isChecked()
+    assert not win.measure.selection and win.measure_button.isChecked()
     win._escape()
     assert not win.measure_button.isChecked() and win.viewer.measure_tool is None
-    win.measure_bar.clear_button.click() if win.measure_bar.isVisible() else win.measure.clear()
+    win.measure.clear()
     assert not win.measure.results
 
+    click((1.0, 1.0, 10.0))
+    win.measure._face_buffers(win.measure.selection[0])
+    assert win.measure._gl_cache and win.measure.hover is not None
     scene.unit_mm = 25.4
     win.set_scene(scene)
     assert win.measure.unit == "in" and "no dice" not in win.measure_bar.unit.toolTip()
+    assert not win.measure._gl_cache and win.measure.hover is None, "lo de la escena anterior no se reutiliza"
     win.measure_bar.unit.setCurrentIndex(win.measure_bar.unit.findData("mm"))
     assert win.measure.length_text(10) == f"{QLocale().toString(254.0, 'f', 2)} mm", "con unidades, se convierte"
     win.close()

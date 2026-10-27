@@ -3108,59 +3108,99 @@ Save anyway? With “Save as” the original keeps its signatures.</translation>
     <context>
         <name>Measure3D</name>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="24" />
-            <source>Distancia</source>
-            <translation>Distance</translation>
+            <location filename="../blackpdf/ui/measure3d.py" line="33" />
+            <source>Esquina</source>
+            <translation>Vertex</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="24" />
-            <source>Ángulo</source>
-            <translation>Angle</translation>
+            <location filename="../blackpdf/ui/measure3d.py" line="33" />
+            <source>Punto de la superficie</source>
+            <translation>Surface point</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="24" />
+            <location filename="../blackpdf/ui/measure3d.py" line="33" />
+            <source>Arista recta</source>
+            <translation>Straight edge</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/measure3d.py" line="34" />
+            <source>Circunferencia</source>
+            <translation>Circle</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/measure3d.py" line="34" />
+            <source>Arco</source>
+            <translation>Arc</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/measure3d.py" line="34" />
+            <source>Arista</source>
+            <translation>Edge</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/measure3d.py" line="34" />
+            <source>Cara plana</source>
+            <translation>Planar face</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/measure3d.py" line="35" />
+            <source>Cara cilíndrica</source>
+            <translation>Cylindrical face</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/measure3d.py" line="35" />
+            <source>Cara</source>
+            <translation>Face</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/measure3d.py" line="230" />
+            <source>Longitud</source>
+            <translation>Length</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/measure3d.py" line="230" />
+            <source>Diámetro</source>
+            <translation>Diameter</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/measure3d.py" line="230" />
             <source>Radio</source>
             <translation>Radius</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="29" />
-            <source>Haz clic en dos puntos.</source>
-            <translation>Click two points.</translation>
+            <location filename="../blackpdf/ui/measure3d.py" line="233" />
+            <source>Centro</source>
+            <translation>Center</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="30" />
-            <source>Haz clic en tres puntos: el segundo es el vértice del ángulo.</source>
-            <translation>Click three points: the second is the vertex of the angle.</translation>
+            <location filename="../blackpdf/ui/measure3d.py" line="235" />
+            <source>Abarca</source>
+            <translation>Sweep</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="31" />
-            <source>Haz clic en tres puntos del borde de un agujero o un cilindro.</source>
-            <translation>Click three points on the edge of a hole or a cylinder.</translation>
+            <location filename="../blackpdf/ui/measure3d.py" line="237" />
+            <source>Área</source>
+            <translation>Area</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="179" />
-            <source>Los tres puntos están en línea: elige otros.</source>
-            <translation>The three points are in a line: choose others.</translation>
+            <location filename="../blackpdf/ui/measure3d.py" line="243" />
+            <source>Entre centros</source>
+            <translation>Center to center</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="180" />
-            <source>Hay puntos repetidos: elige otros.</source>
-            <translation>Some points are repeated: choose others.</translation>
+            <location filename="../blackpdf/ui/measure3d.py" line="245" />
+            <source>Distancia entre caras</source>
+            <translation>Distance between faces</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="204" />
-            <source>Distancia {0}  ·  X {1}  ·  Y {2}  ·  Z {3}</source>
-            <translation>Distance {0}  ·  X {1}  ·  Y {2}  ·  Z {3}</translation>
+            <location filename="../blackpdf/ui/measure3d.py" line="245" />
+            <source>Distancia mínima</source>
+            <translation>Minimum distance</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="207" />
-            <source>Ángulo {0}°</source>
-            <translation>Angle {0}°</translation>
-        </message>
-        <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="208" />
-            <source>Radio {0}  ·  Diámetro {1}</source>
-            <translation>Radius {0}  ·  Diameter {1}</translation>
+            <location filename="../blackpdf/ui/measure3d.py" line="248" />
+            <source>Ángulo</source>
+            <translation>Angle</translation>
         </message>
     </context>
     <context>
@@ -3223,237 +3263,252 @@ Save anyway? With “Save as” the original keeps its signatures.</translation>
     <context>
         <name>Model3DWindow</name>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="38" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="39" />
             <source>Frente</source>
             <translation>Front</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="39" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="40" />
             <source>Detrás</source>
             <translation>Back</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="40" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="41" />
             <source>Izquierda</source>
             <translation>Left</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="41" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="42" />
             <source>Derecha</source>
             <translation>Right</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="42" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="43" />
             <source>Arriba</source>
             <translation>Top</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="43" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="44" />
             <source>Abajo</source>
             <translation>Bottom</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="44" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="45" />
             <source>Isométrica</source>
             <translation>Isometric</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="315" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="354" />
             <source>{0} - Visor 3D - BlackPDF</source>
             <translation>{0} - 3D Viewer - BlackPDF</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="397" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="435" />
             <source>Vistas guardadas y estándar</source>
             <translation>Saved and standard views</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="400" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="438" />
             <source>Vista inicial (Inicio)</source>
             <translation>Initial view (Home)</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="403" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="441" />
             <source>Encuadrar todo (F)</source>
             <translation>Fit all (F)</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="413" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="451" />
             <source>Sólido</source>
             <translation>Solid</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="414" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="452" />
             <source>Sólido con contornos</source>
             <translation>Solid with outlines</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="415" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="453" />
             <source>Alámbrico</source>
             <translation>Wireframe</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="416" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="454" />
             <source>Transparente</source>
             <translation>Transparent</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="423" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="461" />
             <source>Proyección ortográfica (O)</source>
             <translation>Orthographic projection (O)</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="426" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="464" />
             <source>Plano de sección (S)</source>
             <translation>Section plane (S)</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="429" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="467" />
             <source>Medir distancias, ángulos y radios (M)</source>
             <translation>Measure distances, angles and radii (M)</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="432" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="470" />
             <source>Girar automáticamente (Espacio)</source>
             <translation>Rotate automatically (Space)</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="435" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="473" />
             <source>Iluminación y fondo</source>
             <translation>Lighting and background</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="441" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="479" />
             <source>Guardar imagen (Ctrl+S)</source>
             <translation>Save image (Ctrl+S)</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="444" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="482" />
             <source>Piezas (P)</source>
             <translation>Parts (P)</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="446" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="484" />
             <source>Pantalla completa (F11)</source>
             <translation>Full screen (F11)</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="453" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="491" />
             <source>Iluminación</source>
             <translation>Lighting</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="455" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="493" />
             <source>Estudio</source>
             <translation>Studio</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="455" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="493" />
             <source>Linterna</source>
             <translation>Headlight</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="455" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="493" />
             <source>Sin sombras</source>
             <translation>No shading</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="462" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="500" />
             <source>Fondo</source>
             <translation>Background</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="465" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="503" />
             <source>Degradado</source>
             <translation>Gradient</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="466" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="504" />
             <source>El del documento</source>
             <translation>From the document</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="467" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="505" />
             <source>Blanco</source>
             <translation>White</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="468" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="506" />
             <source>Oscuro</source>
             <translation>Dark</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="488" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="526" />
             <source>Arrastrar: girar · Mayús o botón derecho: desplazar · Rueda: acercar · Doble clic: encuadrar</source>
             <translation>Drag: rotate · Shift or right button: pan · Wheel: zoom · Double-click: fit</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="522" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="560" />
             <source>Cargando el modelo 3D</source>
             <translation>Loading the 3D model</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="522" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="560" />
             <source>Esto puede tardar con modelos grandes.</source>
             <translation>This may take a while with large models.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="523" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="561" />
             <source>Cancelar</source>
             <translation>Cancel</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="554" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="592" />
             <source>Cerrar</source>
             <translation>Close</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="561" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="599" />
             <source>No se puede mostrar en 3D</source>
             <translation>Cannot be shown in 3D</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="562" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="600" />
             <source>Este equipo no ofrece OpenGL 2.1, que hace falta para dibujar modelos 3D. Actualizar el controlador de la tarjeta gráfica suele resolverlo.</source>
             <translation>This computer does not provide OpenGL 2.1, which is needed to draw 3D models. Updating the graphics card driver usually fixes it.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="605" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="643" />
             <source>{0} triángulos</source>
             <translation>{0} triangles</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="606" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="644" />
             <source>{0} piezas</source>
             <translation>{0} parts</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="606" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="644" />
             <source>1 pieza</source>
             <translation>1 part</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="618" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="656" />
             <source>Vista {0}</source>
             <translation>View {0}</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="714" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="732" />
+            <source>Entre las dos</source>
+            <translation>Between selections</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/model3d_window.py" line="734" />
+            <source>Pasa el ratón por una esquina, una arista o una cara y haz clic. Después elige otra para medir entre las dos.</source>
+            <translation>Hover over a vertex, an edge or a face and click. Then choose another one to measure between the two.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/model3d_window.py" line="737" />
+            <source>Elige otra esquina, arista o cara para medir entre las dos.</source>
+            <translation>Choose another vertex, edge or face to measure between the two.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/model3d_window.py" line="760" />
             <source>Seleccionada: {0}</source>
             <translation>Selected: {0}</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="721" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="767" />
             <source>modelo</source>
             <translation>model</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="723" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="769" />
             <source>Guardar imagen</source>
             <translation>Save image</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="723" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="769" />
             <source>Imagen PNG (*.png)</source>
             <translation>PNG image (*.png)</translation>
         </message>
@@ -3843,43 +3898,43 @@ Save anyway? With “Save as” the original keeps its signatures.</translation>
     <context>
         <name>PartsPanel</name>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="149" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="150" />
             <source>Piezas</source>
             <translation>Parts</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="156" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="157" />
             <source>Buscar pieza</source>
             <translation>Search part</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="172" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="173" />
             <source>Mostrar todas</source>
             <translation>Show all</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="174" />
-            <location filename="../blackpdf/ui/model3d_window.py" line="240" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="175" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="241" />
             <source>Aislar</source>
             <translation>Isolate</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="185" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="186" />
             <source>Pieza {0}</source>
             <translation>Part {0}</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="239" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="240" />
             <source>Ocultar</source>
             <translation>Hide</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="239" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="240" />
             <source>Mostrar</source>
             <translation>Show</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="241" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="242" />
             <source>Encuadrar</source>
             <translation>Fit to view</translation>
         </message>
@@ -6169,24 +6224,29 @@ Save anyway? With “Save as” the original keeps its signatures.</translation>
         </message>
     </context>
     <context>
-        <name>_MeasureBar</name>
+        <name>_MeasurePanel</name>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="278" />
-            <source>Borrar las medidas</source>
+            <location filename="../blackpdf/ui/model3d_window.py" line="270" />
+            <source>Medir</source>
+            <translation>Measure</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/model3d_window.py" line="271" />
+            <source>Dejar de medir (Esc)</source>
+            <translation>Stop measuring (Esc)</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/model3d_window.py" line="290" />
+            <source>Borrar medidas</source>
             <translation>Clear measurements</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="281" />
-            <source>Dejar de medir</source>
-            <translation>Stop measuring</translation>
-        </message>
-        <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="289" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="299" />
             <source>Unidad en la que se muestran las medidas</source>
-            <translation>Unit used to display measurements</translation>
+            <translation>Unit in which measurements are shown</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="289" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="299" />
             <source>El archivo no dice en qué unidades está el modelo: elige la suya</source>
             <translation>The file doesn't say which units the model uses: choose yours</translation>
         </message>
@@ -6202,17 +6262,17 @@ Save anyway? With “Save as” the original keeps its signatures.</translation>
     <context>
         <name>_SectionBar</name>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="107" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="108" />
             <source>Sección</source>
             <translation>Section</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="117" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="118" />
             <source>Invertir el lado cortado</source>
             <translation>Flip the cut side</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/model3d_window.py" line="120" />
+            <location filename="../blackpdf/ui/model3d_window.py" line="121" />
             <source>Quitar la sección</source>
             <translation>Remove the section</translation>
         </message>

@@ -336,6 +336,8 @@ class Viewer3D(QOpenGLWidget):
 
         self._program: QOpenGLShaderProgram | None = None
         self._gpu: dict[int, _GpuPrimitive] = {}
+        self._world_buffers: dict[int, tuple[bytes, QOpenGLBuffer]] = {}
+        """Lo resaltado al medir, ya en la gráfica: se sube una vez y no en cada fotograma."""
         self._uploaded: Scene | None = None
         self._center = QVector3D(0, 0, 0)
         self._radius = 1.0
@@ -598,6 +600,7 @@ class Viewer3D(QOpenGLWidget):
         for gpu in self._gpu.values():
             gpu.destroy()
         self._gpu.clear()
+        self._drop_world_buffers(set())
         self._uploaded = None
         self._program = None
         self._depth_fbo = None
@@ -790,8 +793,57 @@ class Viewer3D(QOpenGLWidget):
             if transparent_mode:
                 for index, part, prim_index, gpu, material, opacity in blended:
                     self._draw_lines(gl, part, gpu.edges, gpu.edge_count, _with_alpha(edge_color, 0.55))
+        if not pick:
+            # Lo que se resalta al medir, con la profundidad: solo se ve la parte visible de cada cara.
+            drawn = set()
+            for kind, data, color in self.measure_tool.gl_highlights() if self.measure_tool is not None else ():
+                self._draw_world(gl, kind, data, color)
+                drawn.add(id(data))
+            self._drop_world_buffers(drawn)
         program.release()
         gl.glDisable(GL_PROGRAM_POINT_SIZE)
+
+    def _draw_world(self, gl, kind: str, data: bytes, color: QColor) -> None:
+        """Triángulos o líneas ya en coordenadas del mundo (float32 xyz), de un solo color."""
+        if not data:
+            return
+        program = self._program
+        identity = QMatrix4x4()
+        program.setUniformValue("u_model", identity)
+        program.setUniformValue("u_normal_matrix", identity)
+        program.setUniformValue1i("u_lighting", 0)
+        program.setUniformValue1i("u_vertex_color", 0)
+        program.setUniformValue("u_diffuse", _vec(_rgb(color)))
+        program.setUniformValue1f("u_opacity", color.alphaF())
+        program.setUniformValue1f("u_highlight_amount", 0.0)
+        cached = self._world_buffers.get(id(data))
+        if cached is None or cached[0] is not data:
+            if cached is not None:
+                cached[1].destroy()
+            cached = self._world_buffers[id(data)] = (data, _buffer(data))
+        buffer = cached[1]
+        buffer.bind()
+        program.enableAttributeArray(0)
+        program.setAttributeBuffer(0, GL_FLOAT, 0, 3)
+        program.disableAttributeArray(1)
+        program.disableAttributeArray(2)
+        gl.glEnable(GL_BLEND)
+        gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        if kind == "triangles":
+            gl.glDepthMask(False)
+            gl.glEnable(GL_POLYGON_OFFSET_FILL)
+            gl.glPolygonOffset(-1.0, -1.0)
+            gl.glDrawArrays(GL_TRIANGLES, 0, len(data) // 12)
+            gl.glDisable(GL_POLYGON_OFFSET_FILL)
+            gl.glDepthMask(True)
+        else:
+            gl.glDrawArrays(GL_LINES, 0, len(data) // 12)
+        program.disableAttributeArray(0)
+        buffer.release()
+
+    def _drop_world_buffers(self, keep: set[int]) -> None:
+        for key in [key for key in self._world_buffers if key not in keep]:
+            self._world_buffers.pop(key)[1].destroy()
 
     def _wire_color(self, material, index: int) -> QColor:
         if index == self.selected:
@@ -914,8 +966,8 @@ class Viewer3D(QOpenGLWidget):
             return -1
         return value - 1 if value - 1 < len(self.scene.parts) else -1
 
-    def pick_point(self, pos: QPointF) -> QVector3D | None:
-        """Punto de la superficie visible bajo ``pos`` (coordenadas del widget), en el mundo, o None."""
+    def _pick_pixel(self, pos: QPointF, depth: bool):
+        """Color del píxel bajo ``pos`` en un pase de selección de 1x1 (profundidad o pieza), o None."""
         if not self.gl_ok or self._program is None or self.scene is None:
             return None
         ratio = self.devicePixelRatioF()
@@ -932,7 +984,7 @@ class Viewer3D(QOpenGLWidget):
         region.scale(width, height, 1.0)
         self.makeCurrent()
         try:
-            # Se reutiliza: al medir se lee la profundidad en cada movimiento del ratón.
+            # Se reutiliza: al medir se lee en cada movimiento del ratón.
             if self._depth_fbo is None:
                 self._depth_fbo = QOpenGLFramebufferObject(QSize(1, 1), QOpenGLFramebufferObject.Attachment.Depth)
             fbo = self._depth_fbo
@@ -940,11 +992,19 @@ class Viewer3D(QOpenGLWidget):
             gl = self.context().functions()
             gl.glClearColor(1.0, 1.0, 1.0, 1.0)
             gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-            self._render(gl, pick=True, projection=region * projection, size=QSize(1, 1), depth=True)
+            self._render(gl, pick=True, projection=region * projection, size=QSize(1, 1), depth=depth)
             fbo.release()
             color = fbo.toImage().pixelColor(0, 0)
         finally:
             self.doneCurrent()
+        return color, x, y, width, height, projection
+
+    def pick_point(self, pos: QPointF) -> QVector3D | None:
+        """Punto de la superficie visible bajo ``pos`` (coordenadas del widget), en el mundo, o None."""
+        found = self._pick_pixel(pos, depth=True)
+        if found is None:
+            return None
+        color, x, y, width, height, projection = found
         value = (color.red() << 16) | (color.green() << 8) | color.blue()
         if value >= 0xFFFFFF:
             return None
@@ -956,6 +1016,37 @@ class Viewer3D(QOpenGLWidget):
         if abs(world.w()) < 1e-12:
             return None
         return world.toVector3D() / world.w()
+
+    def pick_part(self, pos: QPointF) -> int:
+        """Pieza bajo ``pos`` (como ``pick``, pero leyendo un solo píxel), o -1."""
+        found = self._pick_pixel(pos, depth=False)
+        if found is None:
+            return -1
+        color = found[0]
+        value = color.red() | (color.green() << 8) | (color.blue() << 16)
+        if value == 0xFFFFFF or value - 1 >= len(self.scene.parts):
+            return -1
+        return value - 1
+
+    def projector(self):
+        """Función que lleva puntos del mundo a la pantalla, con la cámara de ahora (para dibujar muchos)."""
+        ratio = self.devicePixelRatioF()
+        width = max(1, int(self.width() * ratio))
+        height = max(1, int(self.height() * ratio))
+        m = self._projection(width / height) * self.camera.view_matrix()
+        r = [m.row(i) for i in range(4)]
+        w_px, h_px = self.width(), self.height()
+
+        def project(p) -> QPointF | None:
+            x, y, z = p
+            cw = r[3].x() * x + r[3].y() * y + r[3].z() * z + r[3].w()
+            if cw <= 1e-12:
+                return None
+            cx = (r[0].x() * x + r[0].y() * y + r[0].z() * z + r[0].w()) / cw
+            cy = (r[1].x() * x + r[1].y() * y + r[1].z() * z + r[1].w()) / cw
+            return QPointF((cx + 1) / 2 * w_px, (1 - cy) / 2 * h_px)
+
+        return project
 
     def grab_image(self) -> QImage:
         """Imagen de lo que se ve, con las medidas encima (grabFramebuffer las taparía con la pieza)."""
@@ -1074,7 +1165,7 @@ class Viewer3D(QOpenGLWidget):
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         if self._drag_button is None:
             if self.measure_tool is not None:
-                self.measure_tool.hover(event.position())
+                self.measure_tool.hover_at(event.position())
             return
         delta = event.position() - self._last
         self._last = event.position()
@@ -1082,7 +1173,7 @@ class Viewer3D(QOpenGLWidget):
             self._moved = True
             if self.measure_tool is not None:
                 # Al girar, el marcador del cursor quedaría en un punto que ya no está bajo el ratón.
-                self.measure_tool.hover_point = None
+                self.measure_tool.hover = None
         if not self._moved:
             return
         if self._is_pan(event):

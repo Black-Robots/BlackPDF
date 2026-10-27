@@ -52,3 +52,9 @@ Términos de la interfaz tal como ya están traducidos. Si un texto nuevo usa un
 | Pulsa / Haz clic | Press / Click | Pressione / Clique | Appuyez / Cliquez |
 | Intro (tecla) | Enter | Enter | Entrée |
 | Esc (tecla) | Esc | Esc | Échap |
+| Esquina (vértice del modelo) | Vertex | Vértice | Sommet |
+| Arista / Arista recta | Edge / Straight edge | Aresta / Aresta reta | Arête / Arête droite |
+| Cara / plana / cilíndrica | Face / Planar / Cylindrical face | Face / plana / cilíndrica | Face / plane / cylindrique |
+| Circunferencia / Arco | Circle / Arc | Circunferência / Arco | Cercle / Arc |
+| Abarca (ángulo de un arco) | Sweep | Ângulo do arco | Angle balayé |
+| Longitud / Diámetro / Centro | Length / Diameter / Center | Comprimento / Diâmetro / Centro | Longueur / Diamètre / Centre |

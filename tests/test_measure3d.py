@@ -99,16 +99,16 @@ def test_snap_ray_in_screen_terms():
     index = m3.SnapIndex(meshes.parts_scene([_cube()]))
     down = (0.0, 0.0, -1.0)
     # Junto a la silueta, sin tocar la pieza: se pega a la arista de arriba.
-    point, kind = index.snap_ray((10.3, 5.0, 100.0), down, 0.6, 0.0, None)
+    point, kind, _segment = index.snap_ray((10.3, 5.0, 100.0), down, 0.6, 0.0, None)
     assert kind == "edge" and all(math.isclose(a, b, abs_tol=1e-6) for a, b in zip(point, (10, 5, 10)))
     # Cerca de una esquina, mirando a la cara de arriba (a 90 del origen).
-    point, kind = index.snap_ray((0.2, 0.3, 100.0), down, 0.6, 0.0, 90.0)
+    point, kind, _segment = index.snap_ray((0.2, 0.3, 100.0), down, 0.6, 0.0, 90.0)
     assert kind == "vertex" and point == (0, 0, 10)
     # Si algo la tapa (la superficie que se ve está más cerca), esa esquina no cuenta.
     assert index.snap_ray((0.2, 0.3, 100.0), down, 0.6, 0.0, 50.0) is None
     # En perspectiva la tolerancia crece con la distancia.
     assert index.snap_ray((11.0, 5.0, 100.0), down, 0.0, 0.005, None) is None
-    assert index.snap_ray((11.0, 5.0, 100.0), down, 0.0, 0.02, None)[1] == "edge"
+    assert index.snap_ray((11.0, 5.0, 100.0), down, 0.0, 0.02, None).kind == "edge"
     assert index.snap_ray((50.0, 50.0, 100.0), down, 0.6, 0.0, None) is None, "lejos de la pieza, nada"
 
 
@@ -127,9 +127,9 @@ def test_snap_ray_stays_fast_with_the_part_far_away():
 def test_snap_ray_ignores_what_the_section_cuts():
     index = m3.SnapIndex(meshes.parts_scene([_cube()]))
     down = (0.0, 0.0, -1.0)
-    assert index.snap_ray((0.2, 0.3, 100.0), down, 0.6, 0.0, None)[0] == (0, 0, 10)
+    assert index.snap_ray((0.2, 0.3, 100.0), down, 0.6, 0.0, None).point == (0, 0, 10)
     cut_top = (0.0, 0.0, 1.0, -5.0)  # todo lo que está por encima de z = 5, recortado
-    point, kind = index.snap_ray((0.2, 0.3, 100.0), down, 0.6, 0.0, None, cut_top)
+    point, kind, _segment = index.snap_ray((0.2, 0.3, 100.0), down, 0.6, 0.0, None, cut_top)
     assert kind == "vertex" and point == (0, 0, 0)
 
 
