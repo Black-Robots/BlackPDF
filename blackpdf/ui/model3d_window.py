@@ -28,7 +28,8 @@ from PySide6.QtWidgets import (
 )
 
 from ..core.model3d import Scene
-from . import errors, formatting, icons, tasks, theme
+from ..core.model3d import measure3d as core_measure3d
+from . import errors, formatting, icons, measure3d, tasks, theme
 from .viewer3d import Viewer3D, opengl_available
 from .widgets import Button, FloatingPanel, IconButton, SegmentedControl, label, separator
 
@@ -247,6 +248,61 @@ class PartsPanel(QFrame):
             self.focusRequested.emit(row)
 
 
+class _MeasureBar(FloatingPanel):
+    """Controles de medir: qué se mide, en qué unidad y el resultado."""
+
+    modeChanged = Signal(str)
+    unitChanged = Signal(str)
+    clearRequested = Signal()
+    closed = Signal()
+
+    def __init__(self, parent: QWidget):
+        super().__init__(parent, inner=(8, 6, 8, 6))
+        layout = QHBoxLayout(self)
+        self.apply_margins(layout)
+        layout.setSpacing(theme.space(2))
+        icon = QLabel(self)
+        icon.setPixmap(icons.pixmap("ruler", 18, dpr=self.devicePixelRatioF()))
+        layout.addWidget(icon)
+        self.modes = SegmentedControl(list(measure3d.mode_names().items()), self)
+        self.modes.changed.connect(self.modeChanged)
+        layout.addWidget(self.modes)
+        self.unit = QComboBox(self)
+        for name in core_measure3d.UNITS_MM:
+            self.unit.addItem(name, name)
+        self.unit.currentIndexChanged.connect(lambda _row: self.unitChanged.emit(self.unit.currentData()))
+        layout.addWidget(self.unit)
+        self.readout = label("", "")
+        self.readout.setMinimumWidth(theme.space(80))
+        layout.addWidget(self.readout, 1)
+        self.clear_button = IconButton("trash-2", self.tr("Borrar las medidas"), self)
+        self.clear_button.clicked.connect(self.clearRequested)
+        layout.addWidget(self.clear_button)
+        close = IconButton("x", self.tr("Dejar de medir"), self)
+        close.clicked.connect(self.closed)
+        layout.addWidget(close)
+
+    def set_unit(self, unit: str, known: bool) -> None:
+        self.unit.blockSignals(True)
+        self.unit.setCurrentIndex(max(0, self.unit.findData(unit)))
+        self.unit.blockSignals(False)
+        self.unit.setToolTip(self.tr("Unidad en la que se muestran las medidas") if known else self.tr(
+            "El archivo no dice en qué unidades está el modelo: elige la suya"))
+
+    def show_text(self, text: str) -> None:
+        self.readout.setText(text)
+        self.adjustSize()
+
+    def reposition(self, above: QWidget | None = None) -> None:
+        parent = self.parentWidget()
+        if parent is not None:
+            self.adjustSize()
+            bottom = parent.height() - theme.space(2)
+            if above is not None and above.isVisible():
+                bottom = above.y() - theme.space(1)
+            self.move((parent.width() - self.width()) // 2, bottom - self.height())
+
+
 class Model3DWindow(QWidget):
     """Ventana independiente con el visor 3D y sus herramientas."""
 
@@ -292,6 +348,14 @@ class Model3DWindow(QWidget):
         self.section_bar.hide()
         self.section_bar.changed.connect(self._apply_section)
         self.section_bar.closed.connect(lambda: self.section_button.setChecked(False))
+        self.measure = measure3d.Measure3D(self.viewer, self)
+        self.measure.changed.connect(self._measure_changed)
+        self.measure_bar = _MeasureBar(self.stage)
+        self.measure_bar.hide()
+        self.measure_bar.modeChanged.connect(self.measure.set_mode)
+        self.measure_bar.unitChanged.connect(self.measure.set_unit)
+        self.measure_bar.clearRequested.connect(self.measure.clear)
+        self.measure_bar.closed.connect(lambda: self.measure_button.setChecked(False))
         self.stage.installEventFilter(self)
 
         self.viewer.partClicked.connect(self._part_clicked)
@@ -362,6 +426,9 @@ class Model3DWindow(QWidget):
         self.section_button = IconButton("slice", self.tr("Plano de sección (S)"), bar, checkable=True)
         self.section_button.toggled.connect(self._toggle_section)
         layout.addWidget(self.section_button)
+        self.measure_button = IconButton("ruler", self.tr("Medir distancias, ángulos y radios (M)"), bar, checkable=True)
+        self.measure_button.toggled.connect(self._toggle_measure)
+        layout.addWidget(self.measure_button)
         self.spin_button = IconButton("rotate-3d", self.tr("Girar automáticamente (Espacio)"), bar, checkable=True)
         self.spin_button.toggled.connect(self.viewer.set_spinning)
         layout.addWidget(self.spin_button)
@@ -429,6 +496,7 @@ class Model3DWindow(QWidget):
             ("H", self._reset),
             ("O", self.projection_button.toggle),
             ("S", self.section_button.toggle),
+            ("M", self.measure_button.toggle),
             ("P", self.parts_button.toggle),
             ("Space", self.spin_button.toggle),
             ("F11", self._toggle_fullscreen),
@@ -526,6 +594,11 @@ class Model3DWindow(QWidget):
             if action.data() == "document":
                 action.setEnabled(scene.background is not None)
         self._fill_views()
+        self.measure.clear()
+        self.measure.invalidate()
+        unit = core_measure3d.unit_name(scene.unit_mm) or "mm"
+        self.measure.unit = unit
+        self.measure_bar.set_unit(unit, scene.unit_mm is not None)
         triangles = scene.triangle_count
         parts = len(scene.parts)
         info = [scene.format]
@@ -560,8 +633,8 @@ class Model3DWindow(QWidget):
 
     def _set_tools_enabled(self, enabled: bool) -> None:
         for widget in (self.views_box, self.home_button, self.fit_button, self.modes, self.projection_button,
-                       self.section_button, self.spin_button, self.light_button, self.export_button,
-                       self.parts_button):
+                       self.section_button, self.measure_button, self.spin_button, self.light_button,
+                       self.export_button, self.parts_button):
             widget.setEnabled(enabled)
 
     # ======================================================================
@@ -594,6 +667,34 @@ class Model3DWindow(QWidget):
             self._apply_section()
         else:
             self.viewer.set_section(None)
+        if self.measure_bar.isVisible():
+            self.measure_bar.reposition(self.section_bar)
+
+    def _toggle_measure(self, enabled: bool) -> None:
+        self.measure_bar.setVisible(enabled)
+        self.viewer.measure_tool = self.measure if enabled else None
+        if enabled:
+            self.viewer.setCursor(Qt.CursorShape.CrossCursor)
+            self._measure_changed()
+            self.measure_bar.reposition(self.section_bar)
+            self.measure_bar.raise_()
+        else:
+            self.measure.cancel()
+            self.measure.stop()
+            self.viewer.unsetCursor()
+        self.viewer.update()
+
+    def _measure_changed(self) -> None:
+        if self.measure.notice:
+            text = self.measure.notice
+        elif self.measure.results and not self.measure.points:
+            text = self.measure.detail(self.measure.results[-1])
+        else:
+            text = measure3d.mode_hints()[self.measure.mode]
+        self.measure_bar.clear_button.setEnabled(bool(self.measure.results))
+        self.measure_bar.show_text(text)
+        if self.measure_bar.isVisible():
+            self.measure_bar.reposition(self.section_bar)
 
     def _apply_section(self) -> None:
         axis, offset, flip = self.section_bar.values()
@@ -625,7 +726,7 @@ class Model3DWindow(QWidget):
             return
         if not path.lower().endswith(".png"):
             path += ".png"
-        image = self.viewer.grabFramebuffer()
+        image = self.viewer.grab_image()
         if not image.save(path, "PNG"):
             errors.show_error(self, OSError(path))
 
@@ -640,6 +741,10 @@ class Model3DWindow(QWidget):
     def _escape(self) -> None:
         if self.isFullScreen():
             self._toggle_fullscreen()
+        elif self.measure_button.isChecked():
+            # Primero se descarta la medida a medias; con otro Esc, se deja de medir.
+            if not self.measure.cancel():
+                self.measure_button.setChecked(False)
         elif self.section_button.isChecked():
             self.section_button.setChecked(False)
         elif self.viewer.selected >= 0:
@@ -654,6 +759,8 @@ class Model3DWindow(QWidget):
                 self.overlay.reposition()
             if self.section_bar.isVisible():
                 self.section_bar.reposition()
+            if self.measure_bar.isVisible():
+                self.measure_bar.reposition(self.section_bar)
         return super().eventFilter(watched, event)
 
     def closeEvent(self, event) -> None:

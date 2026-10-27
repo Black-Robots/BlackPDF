@@ -11,7 +11,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pymupdf
 import pytest
-from PySide6.QtCore import QEvent, QPoint, QPointF, QSettings, Qt
+from PySide6.QtCore import QEvent, QLocale, QPoint, QPointF, QSettings, Qt
 from PySide6.QtGui import QKeyEvent, QMouseEvent
 from PySide6.QtWidgets import QApplication, QLabel
 
@@ -1342,3 +1342,97 @@ def test_clicking_the_active_tool_again_goes_back_to_select(qapp, opened):
     tab.toggle_tool("rect")
     tab.toggle_tool("select")
     assert tab._tool_name == "select", "pulsar Seleccionar con Seleccionar activo no hace nada raro"
+
+
+def test_measure_in_3d_viewer(qapp, monkeypatch):
+    """Medir en el visor 3D: sin OpenGL en las pruebas, el punto bajo el ratón se simula."""
+    from PySide6.QtGui import QVector3D
+
+    from blackpdf.core.model3d import measure3d as core3d
+    from blackpdf.core.model3d import meshes
+    from blackpdf.ui.model3d_window import Model3DWindow
+    from tests.test_measure3d import _cube
+
+    scene = meshes.parts_scene([_cube()])
+    win = Model3DWindow("cubo.stl")
+    win.resize(1200, 760)
+    win.show()
+    win.set_scene(scene)
+    pump(qapp, 0.1)
+    queue: list[tuple[float, float, float]] = []
+    current = {}
+
+    def pick_point(pos):
+        current["point"] = queue.pop(0) if queue else None
+        return QVector3D(*current["point"]) if current["point"] is not None else None
+
+    def pick_ray(pos):
+        # Como mirar desde arriba (eje Z) justo sobre el punto simulado.
+        if current.get("point") is None:
+            return None
+        x, y, z = current["point"]
+        return QVector3D(x, y, z + 100), QVector3D(0, 0, -1)
+
+    monkeypatch.setattr(win.viewer, "pick_point", pick_point)
+    monkeypatch.setattr(win.viewer, "pick_ray", pick_ray)
+    monkeypatch.setattr(win.viewer, "snap_tolerance", lambda origin, direction, pixels: (0.6, 0.0))
+    monkeypatch.setattr(win.viewer, "project", lambda point: QPointF(point.x() * 10, point.y() * 10))
+    clicked = []
+    win.viewer.partClicked.connect(clicked.append)
+
+    win.measure_button.setChecked(True)
+    assert win.viewer.measure_tool is win.measure and win.measure_bar.isVisibleTo(win)
+    assert "no dice en qué unidades" in win.measure_bar.unit.toolTip(), "un STL no trae unidades"
+
+    def click(point):
+        queue.append(point)
+        win.measure.click(QPointF(0, 0))
+
+    click((0.3, 0.2, 10.0))      # cerca de la esquina (0, 0, 10)
+    click((10.1, 0.25, 9.9))     # cerca de la esquina (10, 0, 10)
+    result = win.measure.results[-1]
+    assert result.kind == "distance" and result.points == [(0, 0, 10), (10, 0, 10)] and result.value == 10
+    assert win.measure_bar.readout.text() == win.measure.detail(result)
+    win.measure_bar.unit.setCurrentIndex(win.measure_bar.unit.findData("cm"))
+    assert win.measure.length_text(10) == f"{QLocale().toString(10.0, 'f', 2)} cm", \
+        "sin unidades en el archivo, se elige en qué está el modelo: no se convierte"
+
+    win.measure_bar.modes.set_value("angle")
+    for point in ((10.0, 0.1, 10.0), (0.2, 0.2, 10.0), (0.1, 10.0, 10.0)):
+        click(point)
+    assert win.measure.results[-1].kind == "angle" and abs(win.measure.results[-1].value - 90) < 1e-9
+
+    win.measure_bar.modes.set_value("radius")
+    for point in ((5.0, 5.0, 10.0), (5.0, 5.0, 10.0), (5.0, 5.0, 10.0)):
+        click(point)
+    assert win.measure.results[-1].kind == "angle", "tres puntos iguales no son una circunferencia: se descartan"
+    assert "en línea" in win.measure_bar.readout.text(), "y se avisa"
+    import math as _math
+
+    for t in (0.0, 2.0, 4.0):
+        click((5 + 3 * _math.cos(t), 5 + 3 * _math.sin(t), 10.0))
+    radius = win.measure.results[-1]
+    assert radius.kind == "radius" and abs(radius.value - 3) < 1e-6  # el visor da puntos en float32
+    assert abs(core3d.convert(radius.value, 1.0, "cm") - 0.3) < 1e-6
+
+    # Midiendo, un clic no selecciona piezas.
+    pos = QPointF(200, 200)
+    for kind in ("press", "release"):
+        mouse(win.viewer, kind, pos)
+    assert not clicked
+    # Esc descarta la medida a medias y, con otro Esc, se deja de medir.
+    click((1.0, 1.0, 10.0))
+    win._escape()
+    assert not win.measure.points and win.measure_button.isChecked()
+    win._escape()
+    assert not win.measure_button.isChecked() and win.viewer.measure_tool is None
+    win.measure_bar.clear_button.click() if win.measure_bar.isVisible() else win.measure.clear()
+    assert not win.measure.results
+
+    scene.unit_mm = 25.4
+    win.set_scene(scene)
+    assert win.measure.unit == "in" and "no dice" not in win.measure_bar.unit.toolTip()
+    win.measure_bar.unit.setCurrentIndex(win.measure_bar.unit.findData("mm"))
+    assert win.measure.length_text(10) == f"{QLocale().toString(254.0, 'f', 2)} mm", "con unidades, se convierte"
+    win.close()
+    pump(qapp, 0.05)

@@ -17,6 +17,7 @@ from PySide6.QtCore import QPointF, QRectF, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import (
     QColor,
     QGuiApplication,
+    QImage,
     QOffscreenSurface,
     QOpenGLContext,
     QFont,
@@ -128,6 +129,16 @@ uniform bool u_clip;
 uniform vec4 u_clip_plane;
 uniform vec3 u_highlight;
 uniform float u_highlight_amount;
+uniform bool u_depth_out;
+
+vec3 pack_depth(float depth) {
+    // Profundidad en 24 bits repartida en RGB: así se lee con la imagen del pase de selección.
+    float value = floor(depth * 16777215.0 + 0.5);
+    float r = floor(value / 65536.0);
+    value -= r * 65536.0;
+    float g = floor(value / 256.0);
+    return vec3(r, g, value - g * 256.0) / 255.0;
+}
 
 vec3 light(vec3 n, vec3 v, vec3 dir, vec3 color, vec3 base, float exponent) {
     vec3 l = normalize(dir);
@@ -139,6 +150,10 @@ vec3 light(vec3 n, vec3 v, vec3 dir, vec3 color, vec3 base, float exponent) {
 
 void main() {
     if (u_clip && dot(vec4(v_world, 1.0), u_clip_plane) > 0.0) discard;
+    if (u_depth_out) {
+        gl_FragColor = vec4(pack_depth(gl_FragCoord.z), 1.0);
+        return;
+    }
     vec3 base = u_vertex_color ? v_color.rgb : u_diffuse;
     float alpha = u_opacity * (u_vertex_color ? v_color.a : 1.0);
     vec3 color = base;
@@ -338,6 +353,9 @@ class Viewer3D(QOpenGLWidget):
         self._anim_from: Camera | None = None
         self._anim_to: Camera | None = None
         self._anim_t = 0.0
+        self.measure_tool = None
+        """Herramienta de medir activa (ui/measure3d.py): recibe los clics y dibuja encima."""
+        self._depth_fbo: QOpenGLFramebufferObject | None = None
         theme.manager().changed.connect(self.update)
 
     # ======================================================================
@@ -582,6 +600,7 @@ class Viewer3D(QOpenGLWidget):
         self._gpu.clear()
         self._uploaded = None
         self._program = None
+        self._depth_fbo = None
         self.doneCurrent()
 
     def _upload(self) -> None:
@@ -602,11 +621,17 @@ class Viewer3D(QOpenGLWidget):
         if self.gl_ok and self._program is not None and self.scene is not None:
             painter.beginNativePainting()
             try:
-                self._render(self.context().functions(), pick=False)
+                gl = self.context().functions()
+                self._render(gl, pick=False)
+                # Lo que se dibuja encima (ejes, medidas) no debe quedar tapado por la pieza.
+                gl.glDisable(GL_DEPTH_TEST)
+                gl.glClear(GL_DEPTH_BUFFER_BIT)
             finally:
                 painter.endNativePainting()
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
             self._paint_axes(painter)
+            if self.measure_tool is not None:
+                self.measure_tool.paint(painter)
         painter.end()
 
     def _paint_background(self, painter: QPainter) -> None:
@@ -659,14 +684,18 @@ class Viewer3D(QOpenGLWidget):
         normal[axis] = -1.0 if self.section_flip else 1.0
         return QVector4D(normal[0], normal[1], normal[2], -position * normal[axis])
 
-    def _render(self, gl, pick: bool) -> None:
+    def _render(self, gl, pick: bool, projection: QMatrix4x4 | None = None, size: QSize | None = None,
+                depth: bool = False) -> None:
         self._upload()
         program = self._program
         scene = self.scene
         ratio = self.devicePixelRatioF()
         width = max(1, int(self.width() * ratio))
         height = max(1, int(self.height() * ratio))
-        gl.glViewport(0, 0, width, height)
+        if size is not None:
+            gl.glViewport(0, 0, size.width(), size.height())
+        else:
+            gl.glViewport(0, 0, width, height)
         gl.glDisable(GL_SCISSOR_TEST)
         gl.glDisable(GL_STENCIL_TEST)
         gl.glDisable(GL_CULL_FACE)
@@ -684,8 +713,10 @@ class Viewer3D(QOpenGLWidget):
             gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         view = self.camera.view_matrix()
-        projection = self._projection(width / height)
+        if projection is None:
+            projection = self._projection(width / height)
         program.bind()
+        program.setUniformValue1i("u_depth_out", 1 if depth else 0)
         program.setUniformValue("u_view", view)
         program.setUniformValue("u_projection", projection)
         program.setUniformValue1i("u_light_mode", LIGHTING_MODES.index(self.lighting))
@@ -721,8 +752,10 @@ class Viewer3D(QOpenGLWidget):
 
         draw_faces = mode != "wireframe" or pick
         if draw_faces:
-            gl.glEnable(GL_POLYGON_OFFSET_FILL)
-            gl.glPolygonOffset(1.0, 1.0)
+            # Al leer la profundidad, sin desplazar las caras: el punto queda justo en la superficie.
+            if not depth:
+                gl.glEnable(GL_POLYGON_OFFSET_FILL)
+                gl.glPolygonOffset(1.0, 1.0)
             for item in opaque:
                 self._draw(gl, item, pick, wire=False)
             gl.glDisable(GL_POLYGON_OFFSET_FILL)
@@ -881,6 +914,110 @@ class Viewer3D(QOpenGLWidget):
             return -1
         return value - 1 if value - 1 < len(self.scene.parts) else -1
 
+    def pick_point(self, pos: QPointF) -> QVector3D | None:
+        """Punto de la superficie visible bajo ``pos`` (coordenadas del widget), en el mundo, o None."""
+        if not self.gl_ok or self._program is None or self.scene is None:
+            return None
+        ratio = self.devicePixelRatioF()
+        width = max(1, int(self.width() * ratio))
+        height = max(1, int(self.height() * ratio))
+        x = pos.x() * ratio
+        y = height - pos.y() * ratio
+        if not (0 <= x < width and 0 <= y < height):
+            return None
+        projection = self._projection(width / height)
+        # Como gluPickMatrix: el píxel bajo el ratón ocupa toda la imagen de 1x1.
+        region = QMatrix4x4()
+        region.translate(width - 2 * x, height - 2 * y, 0)
+        region.scale(width, height, 1.0)
+        self.makeCurrent()
+        try:
+            # Se reutiliza: al medir se lee la profundidad en cada movimiento del ratón.
+            if self._depth_fbo is None:
+                self._depth_fbo = QOpenGLFramebufferObject(QSize(1, 1), QOpenGLFramebufferObject.Attachment.Depth)
+            fbo = self._depth_fbo
+            fbo.bind()
+            gl = self.context().functions()
+            gl.glClearColor(1.0, 1.0, 1.0, 1.0)
+            gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+            self._render(gl, pick=True, projection=region * projection, size=QSize(1, 1), depth=True)
+            fbo.release()
+            color = fbo.toImage().pixelColor(0, 0)
+        finally:
+            self.doneCurrent()
+        value = (color.red() << 16) | (color.green() << 8) | color.blue()
+        if value >= 0xFFFFFF:
+            return None
+        ndc = QVector4D(2 * x / width - 1, 2 * y / height - 1, 2 * value / 0xFFFFFF - 1, 1.0)
+        inverse, ok = (projection * self.camera.view_matrix()).inverted()
+        if not ok:
+            return None
+        world = inverse.map(ndc)
+        if abs(world.w()) < 1e-12:
+            return None
+        return world.toVector3D() / world.w()
+
+    def grab_image(self) -> QImage:
+        """Imagen de lo que se ve, con las medidas encima (grabFramebuffer las taparía con la pieza)."""
+        tool = self.measure_tool
+        self.measure_tool = None
+        try:
+            image = self.grabFramebuffer()
+        finally:
+            self.measure_tool = tool
+        if tool is not None:
+            image.setDevicePixelRatio(self.devicePixelRatioF())
+            painter = QPainter(image)
+            tool.paint(painter, hover=False)
+            painter.end()
+        return image
+
+    def project(self, point: QVector3D) -> QPointF | None:
+        """Dónde se ve un punto del mundo, en coordenadas del widget; None si queda detrás de la cámara."""
+        ratio = self.devicePixelRatioF()
+        width = max(1, int(self.width() * ratio))
+        height = max(1, int(self.height() * ratio))
+        clip = (self._projection(width / height) * self.camera.view_matrix()).map(QVector4D(point, 1.0))
+        if clip.w() <= 1e-12:
+            return None
+        x, y = clip.x() / clip.w(), clip.y() / clip.w()
+        return QPointF((x + 1) / 2 * self.width(), (1 - y) / 2 * self.height())
+
+    def clip_values(self) -> tuple[float, float, float, float] | None:
+        """Plano de sección activo (a, b, c, d): lo que da positivo está recortado."""
+        plane = self._clip_plane()
+        return None if plane is None else (plane.x(), plane.y(), plane.z(), plane.w())
+
+    def pick_ray(self, pos: QPointF) -> tuple[QVector3D, QVector3D] | None:
+        """Rayo que sale del cursor hacia la escena: origen (en el plano cercano) y dirección unitaria."""
+        ratio = self.devicePixelRatioF()
+        width = max(1, int(self.width() * ratio))
+        height = max(1, int(self.height() * ratio))
+        inverse, ok = (self._projection(width / height) * self.camera.view_matrix()).inverted()
+        if not ok:
+            return None
+        x = 2 * pos.x() / max(self.width(), 1) - 1
+        y = 1 - 2 * pos.y() / max(self.height(), 1)
+        near = inverse.map(QVector4D(x, y, -1.0, 1.0))
+        far = inverse.map(QVector4D(x, y, 1.0, 1.0))
+        if abs(near.w()) < 1e-12 or abs(far.w()) < 1e-12:
+            return None
+        origin = near.toVector3D() / near.w()
+        direction = far.toVector3D() / far.w() - origin
+        if direction.length() == 0:
+            return None
+        return origin, direction.normalized()
+
+    def snap_tolerance(self, origin: QVector3D, direction: QVector3D, pixels: float) -> tuple[float, float]:
+        """``pixels`` de pantalla en unidades del modelo a lo largo del rayo: ``near + growth * t``."""
+        camera = self.camera
+        if camera.orthographic:
+            return pixels * camera.ortho_height / max(self.height(), 1), 0.0
+        per_depth = pixels * 2 * math.tan(math.radians(camera.vertical_fov(self.aspect())) / 2) / max(self.height(), 1)
+        forward = -camera.back()
+        return (per_depth * max(QVector3D.dotProduct(origin - camera.eye(), forward), 0.0),
+                per_depth * QVector3D.dotProduct(direction, forward))
+
     # ======================================================================
     # Superposiciones
     # ======================================================================
@@ -936,11 +1073,16 @@ class Viewer3D(QOpenGLWidget):
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         if self._drag_button is None:
+            if self.measure_tool is not None:
+                self.measure_tool.hover(event.position())
             return
         delta = event.position() - self._last
         self._last = event.position()
         if (event.position() - self._drag_origin).manhattanLength() > 3:
             self._moved = True
+            if self.measure_tool is not None:
+                # Al girar, el marcador del cursor quedaría en un punto que ya no está bajo el ratón.
+                self.measure_tool.hover_point = None
         if not self._moved:
             return
         if self._is_pan(event):
@@ -956,11 +1098,18 @@ class Viewer3D(QOpenGLWidget):
         self._drag_button = None
         self.unsetCursor()
         if not self._moved and button == Qt.MouseButton.LeftButton:
-            self.partClicked.emit(self.pick(event.position()))
+            if self.measure_tool is not None:
+                self.measure_tool.click(event.position())
+            else:
+                self.partClicked.emit(self.pick(event.position()))
         elif self._moved:
             self.cameraChanged.emit()
 
     def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
+        if self.measure_tool is not None:
+            # Midiendo, el segundo clic de un doble clic es otro punto, no «encuadrar».
+            self.mousePressEvent(event)
+            return
         if event.button() == Qt.MouseButton.LeftButton:
             index = self.pick(event.position())
             if index >= 0:

@@ -92,6 +92,8 @@ class Scene:
     default_view: int | None = None
     background: tuple[float, float, float] | None = None
     warnings: list[str] = field(default_factory=list)
+    unit_mm: float | None = None
+    """Milímetros por unidad del modelo, si el archivo lo dice (para medir)."""
 
     @property
     def triangle_count(self) -> int:

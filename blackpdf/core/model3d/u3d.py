@@ -581,6 +581,10 @@ class U3DFile:
 
     def scene(self) -> Scene:
         scene = Scene(format="U3D", warnings=list(self.warnings))
+        # El factor de escala dice cuántos metros mide una unidad; 1 es el valor por defecto
+        # y casi nadie lo cambia, así que solo se fía de él si es otro.
+        if self.units != 1.0:
+            scene.unit_mm = self.units * 1000.0
         material_index: dict[tuple, int] = {}
         cache: dict[tuple, list[int]] = {}
 

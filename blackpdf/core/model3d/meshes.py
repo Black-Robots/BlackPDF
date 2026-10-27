@@ -515,5 +515,31 @@ def parts_scene(parts: list[MeshPart], fmt: str = "MESH") -> Scene:
     return scene
 
 
+UNIT_MM_BY_EXTENSION = {".step": 1.0, ".stp": 1.0, ".iges": 1.0, ".igs": 1.0, ".gltf": 1000.0, ".glb": 1000.0,
+                        ".3mf": 1.0}
+"""Unidades que fija cada formato: OpenCASCADE da milímetros, glTF va en metros y 3MF, salvo que diga otra
+cosa, en milímetros. STL y OBJ no lo dicen."""
+
+
+_3MF_UNITS = {"micron": 0.001, "millimeter": 1.0, "centimeter": 10.0, "inch": 25.4, "foot": 304.8, "meter": 1000.0}
+
+
+def unit_mm(path: str) -> float | None:
+    """Milímetros por unidad del modelo de un archivo de piezas, o None si el formato no lo dice."""
+    extension = Path(path).suffix.lower()
+    if extension == ".3mf":
+        try:
+            with zipfile.ZipFile(path) as archive:
+                name = next((n for n in archive.namelist() if n.lower().endswith(".model")), None)
+                head = archive.read(name)[:4096].decode("utf-8", "replace") if name else ""
+        except (OSError, zipfile.BadZipFile):
+            return 1.0
+        found = re.search(r"<model\b[^>]*\bunit=\"(\w+)\"", head)
+        return _3MF_UNITS.get(found.group(1).lower(), 1.0) if found else 1.0
+    return UNIT_MM_BY_EXTENSION.get(extension)
+
+
 def load_mesh_file(path: str, progress=None) -> Scene:
-    return parts_scene(read_parts(path, progress), Path(path).suffix.lstrip(".").upper())
+    scene = parts_scene(read_parts(path, progress), Path(path).suffix.lstrip(".").upper())
+    scene.unit_mm = unit_mm(path)
+    return scene
