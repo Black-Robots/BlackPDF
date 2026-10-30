@@ -10,8 +10,9 @@ from PySide6.QtWidgets import QCheckBox, QSpinBox, QWidget
 from ...core.document import needs_password, open_pdf
 from ...core.errors import BlackPdfError, WrongPasswordError
 from ...core.files import unique_path
+from ...core.ranges import parse_page_ranges, parse_page_selection
 from ..settings import settings
-from ..widgets import AutoStack, FileListWidget, PageRangeEdit, SegmentedControl, pdf_filter
+from ..widgets import AutoStack, FileListWidget, PageRangeEdit, SegmentedControl, label, pdf_filter
 from .base import OutputPicker, SourcePicker, ToolDialog, ValidationError
 from .common import ask_password
 
@@ -264,7 +265,8 @@ class ExtractDialog(_SingleSourceDialog):
         return self.tr("Extraer páginas")
 
     def description(self):
-        return self.tr("Crea un PDF nuevo solo con las páginas que elijas, en el orden que las escribas.")
+        return self.tr("Crea un PDF nuevo solo con las páginas que elijas, en el orden que las escribas, "
+                       "o un PDF aparte por cada página o cada rango.")
 
     def action_text(self):
         return self.tr("Extraer")
@@ -273,21 +275,88 @@ class ExtractDialog(_SingleSourceDialog):
         self.add_source()
         self.ranges = PageRangeEdit(allow_empty=False)
         self.ranges.setText(self.preset.get("pages", ""))
-        self.ranges.textChanged.connect(lambda _: self.refresh())
-        self.add_field(self.tr("Páginas"), self.ranges, self.tr("Ejemplo: 1-3, 5, 8-10. El orden se respeta."))
-        self.add_output()
+        self.ranges.textChanged.connect(lambda _: self._update_hint())
+        self.add_field(self.tr("Páginas"), self.ranges)
+        self.each_page = QCheckBox(self.tr("Extraer cada página en un PDF aparte"))
+        self.each_range = QCheckBox(self.tr("Un PDF por cada rango"))
+        self.add_field("", self.each_page)
+        self.add_field("", self.each_range)
+        self.hint = label("", "caption", wrap=True)
+        self.form.addWidget(self.hint)
+        self.each_page.toggled.connect(self._mode_changed)
+        self.each_range.toggled.connect(self._mode_changed)
+        self.output_file = self.add_output()
+        self.output_file_block = self.output_file.parentWidget()
+        self.output_folder = OutputPicker("folder", pdf_filter(), self)
+        self.output_folder_block = self.add_field(self.tr("Carpeta de destino"), self.output_folder)
+        self._mode_changed()
         self.finish_build()
+
+    def _separate(self) -> str:
+        """«page», «range» o vacío (todo en un solo PDF)."""
+        if self.each_page.isChecked():
+            return "page"
+        return "range" if self.each_range.isChecked() else ""
+
+    def _mode_changed(self, *_args):
+        mode = self._separate()
+        # Página a página, el rango ya no cuenta: cada página es su propio archivo.
+        self.each_range.setEnabled(not self.each_page.isChecked())
+        self.ranges.allow_empty = mode == "page"
+        self.ranges.setPlaceholderText(self.tr("Todas las páginas") if mode == "page" else self.tr("Ejemplo: 1-3, 5, 8-10"))
+        self.ranges.set_page_count(self.ranges.page_count)
+        self.output_file_block.setVisible(not mode)
+        self.output_folder_block.setVisible(bool(mode))
+        self._update_hint()
+
+    def _update_hint(self):
+        mode = self._separate()
+        if mode == "page":
+            hint = self.tr("Un PDF por cada página: 12 páginas, 12 archivos. Déjalo vacío para extraerlas todas.")
+        elif mode == "range":
+            hint = self.tr("Un PDF por cada rango: «1-3, 5-6» da dos archivos, uno de la 1 a la 3 y otro de la 5 a la 6.")
+        else:
+            hint = self.tr("Todo en un solo PDF. Ejemplo: 1-3, 5, 8-10. El orden se respeta.")
+        count = self._file_count()
+        if count:
+            hint += " " + (self.tr("Se creará 1 archivo.") if count == 1 else self.tr("Se crearán {0} archivos.").format(count))
+        self.hint.setText(hint)
+        self.refresh()
+
+    def _file_count(self) -> int:
+        """Archivos que saldrán con el documento elegido (0 si aún no se sabe)."""
+        mode, spec, pages = self._separate(), self.ranges.text(), self.source.page_count
+        if not mode or pages <= 0 or not self.ranges.is_valid():
+            return 0
+        try:
+            if mode == "page":
+                return len(parse_page_selection(spec, pages, allow_empty_all=True))
+            return len(parse_page_ranges(spec, pages)) if spec.strip() else 0
+        except BlackPdfError:
+            return 0
 
     def on_source_changed(self):
         self.ranges.set_page_count(self.source.page_count)
+        self._update_hint()
+        if self.source.is_ready():
+            self.output_folder.suggest(self.default_folder(self.source, "paginas"))
 
     def is_ready(self):
-        return self.source.is_ready() and bool(self.ranges.text().strip()) and self.ranges.is_valid()
+        if not self.source.is_ready() or not self.ranges.is_valid():
+            return False
+        return self._separate() == "page" or bool(self.ranges.text().strip())
 
     def job(self):
         source = self.require_source()
-        output = self.require_output(self.output, [self.source.original_path()])
-        return "blackpdf.core.split:extract_pages", (source, self.ranges.text(), output), self.common_kwargs()
+        mode = self._separate()
+        if not mode:
+            output = self.require_output(self.output_file, [self.source.original_path()])
+            return "blackpdf.core.split:extract_pages", (source, self.ranges.text(), output), self.common_kwargs()
+        folder = self.output_folder.path()
+        if not folder:
+            raise ValidationError(self.tr("Elige la carpeta de destino."))
+        kwargs = {"each": mode, "base_name": self.source.stem(), **self.common_kwargs()}
+        return "blackpdf.core.split:extract_pages_separately", (source, self.ranges.text(), folder), kwargs
 
 
 class RotateDialog(_SingleSourceDialog):

@@ -67,52 +67,52 @@
     <context>
         <name>AlternateDialog</name>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="218" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="219" />
             <source>Alternar páginas</source>
             <translation>Alternar páginas</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="221" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="222" />
             <source>Intercala las páginas de dos PDF: 1 del primero, 1 del segundo... Ideal para escaneos a doble cara.</source>
             <translation>Intercala as páginas de dois PDFs: 1 do primeiro, 1 do segundo... Ideal para digitalizações frente e verso.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="226" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="227" />
             <source>Alternar</source>
             <translation>Alternar</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="229" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="230" />
             <source>Primer PDF (caras delanteras)</source>
             <translation>Primeiro PDF (frentes)</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="231" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="232" />
             <source>Primer documento</source>
             <translation>Primeiro documento</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="232" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="233" />
             <source>Segundo PDF (caras traseras)</source>
             <translation>Segundo PDF (versos)</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="234" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="235" />
             <source>Segundo documento</source>
             <translation>Segundo documento</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="235" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="236" />
             <source>Invertir el orden del segundo documento</source>
             <translation>Inverter a ordem do segundo documento</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="237" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="238" />
             <source>Actívalo si escaneaste las caras traseras dando la vuelta al taco de hojas: la última página escaneada es la trasera de la primera.</source>
             <translation>Ative se você digitalizou os versos virando o maço de folhas: a última página digitalizada é o verso da primeira.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="250" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="251" />
             <source>Elige el segundo documento.</source>
             <translation>Escolha o segundo documento.</translation>
         </message>
@@ -2018,29 +2018,79 @@ Salvar mesmo assim? Com “Salvar como” o original mantém as assinaturas.</tr
     <context>
         <name>ExtractDialog</name>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="264" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="265" />
             <source>Extraer páginas</source>
             <translation>Extrair páginas</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="267" />
-            <source>Crea un PDF nuevo solo con las páginas que elijas, en el orden que las escribas.</source>
-            <translation>Cria um PDF novo apenas com as páginas que você escolher, na ordem em que digitá-las.</translation>
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="268" />
+            <source>Crea un PDF nuevo solo con las páginas que elijas, en el orden que las escribas, o un PDF aparte por cada página o cada rango.</source>
+            <translation>Cria um PDF novo só com as páginas que você escolher, na ordem em que digitar, ou um PDF separado para cada página ou cada intervalo.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="270" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="272" />
             <source>Extraer</source>
             <translation>Extrair</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="277" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="279" />
             <source>Páginas</source>
             <translation>Páginas</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="277" />
-            <source>Ejemplo: 1-3, 5, 8-10. El orden se respeta.</source>
-            <translation>Exemplo: 1-3, 5, 8-10. A ordem é respeitada.</translation>
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="280" />
+            <source>Extraer cada página en un PDF aparte</source>
+            <translation>Extrair cada página em um PDF separado</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="281" />
+            <source>Un PDF por cada rango</source>
+            <translation>Um PDF para cada intervalo</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="291" />
+            <source>Carpeta de destino</source>
+            <translation>Pasta de destino</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="306" />
+            <source>Todas las páginas</source>
+            <translation>Todas as páginas</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="306" />
+            <source>Ejemplo: 1-3, 5, 8-10</source>
+            <translation>Exemplo: 1-3, 5, 8-10</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="315" />
+            <source>Un PDF por cada página: 12 páginas, 12 archivos. Déjalo vacío para extraerlas todas.</source>
+            <translation>Um PDF para cada página: 12 páginas, 12 arquivos. Deixe vazio para extrair todas.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="317" />
+            <source>Un PDF por cada rango: «1-3, 5-6» da dos archivos, uno de la 1 a la 3 y otro de la 5 a la 6.</source>
+            <translation>Um PDF para cada intervalo: “1-3, 5-6” gera dois arquivos, um da página 1 à 3 e outro da 5 à 6.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="319" />
+            <source>Todo en un solo PDF. Ejemplo: 1-3, 5, 8-10. El orden se respeta.</source>
+            <translation>Tudo em um único PDF. Exemplo: 1-3, 5, 8-10. A ordem é mantida.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="322" />
+            <source>Se creará 1 archivo.</source>
+            <translation>Será criado 1 arquivo.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="322" />
+            <source>Se crearán {0} archivos.</source>
+            <translation>Serão criados {0} arquivos.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="357" />
+            <source>Elige la carpeta de destino.</source>
+            <translation>Escolha a pasta de destino.</translation>
         </message>
     </context>
     <context>
@@ -3108,97 +3158,97 @@ Salvar mesmo assim? Com “Salvar como” o original mantém as assinaturas.</tr
     <context>
         <name>Measure3D</name>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="33" />
+            <location filename="../blackpdf/ui/measure3d.py" line="36" />
             <source>Esquina</source>
             <translation>Vértice</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="33" />
+            <location filename="../blackpdf/ui/measure3d.py" line="36" />
             <source>Punto de la superficie</source>
             <translation>Ponto da superfície</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="33" />
+            <location filename="../blackpdf/ui/measure3d.py" line="36" />
             <source>Arista recta</source>
             <translation>Aresta reta</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="34" />
+            <location filename="../blackpdf/ui/measure3d.py" line="37" />
             <source>Circunferencia</source>
             <translation>Circunferência</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="34" />
+            <location filename="../blackpdf/ui/measure3d.py" line="37" />
             <source>Arco</source>
             <translation>Arco</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="34" />
+            <location filename="../blackpdf/ui/measure3d.py" line="37" />
             <source>Arista</source>
             <translation>Aresta</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="34" />
+            <location filename="../blackpdf/ui/measure3d.py" line="37" />
             <source>Cara plana</source>
             <translation>Face plana</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="35" />
+            <location filename="../blackpdf/ui/measure3d.py" line="38" />
             <source>Cara cilíndrica</source>
             <translation>Face cilíndrica</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="35" />
+            <location filename="../blackpdf/ui/measure3d.py" line="38" />
             <source>Cara</source>
             <translation>Face</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="230" />
+            <location filename="../blackpdf/ui/measure3d.py" line="301" />
             <source>Longitud</source>
             <translation>Comprimento</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="230" />
+            <location filename="../blackpdf/ui/measure3d.py" line="301" />
             <source>Diámetro</source>
             <translation>Diâmetro</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="230" />
+            <location filename="../blackpdf/ui/measure3d.py" line="301" />
             <source>Radio</source>
             <translation>Raio</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="233" />
+            <location filename="../blackpdf/ui/measure3d.py" line="304" />
             <source>Centro</source>
             <translation>Centro</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="235" />
+            <location filename="../blackpdf/ui/measure3d.py" line="306" />
             <source>Abarca</source>
             <translation>Ângulo do arco</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="237" />
+            <location filename="../blackpdf/ui/measure3d.py" line="308" />
             <source>Área</source>
             <translation>Área</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="243" />
+            <location filename="../blackpdf/ui/measure3d.py" line="314" />
             <source>Entre centros</source>
             <translation>Entre centros</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="245" />
+            <location filename="../blackpdf/ui/measure3d.py" line="316" />
             <source>Distancia entre caras</source>
             <translation>Distância entre faces</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="245" />
+            <location filename="../blackpdf/ui/measure3d.py" line="316" />
             <source>Distancia mínima</source>
             <translation>Distância mínima</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/measure3d.py" line="248" />
+            <location filename="../blackpdf/ui/measure3d.py" line="319" />
             <source>Ángulo</source>
             <translation>Ângulo</translation>
         </message>
@@ -3224,38 +3274,38 @@ Salvar mesmo assim? Com “Salvar como” o original mantém as assinaturas.</tr
     <context>
         <name>MergeDialog</name>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="39" />
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="45" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="40" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="46" />
             <source>Unir PDF</source>
             <translation>Juntar PDF</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="42" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="43" />
             <source>Combina varios PDF en uno solo, en el orden que elijas. Arrastra para reordenar.</source>
             <translation>Combina vários PDFs em um só, na ordem que você escolher. Arraste para reordenar.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="51" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="52" />
             <source>Archivos</source>
             <translation>Arquivos</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="52" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="53" />
             <source>Crear un marcador por cada archivo</source>
             <translation>Criar um marcador para cada arquivo</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="56" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="57" />
             <source>Guardar como</source>
             <translation>Salvar como</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="75" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="76" />
             <source>Añade al menos dos archivos.</source>
             <translation>Adicione pelo menos dois arquivos.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="82" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="83" />
             <source>Falta la contraseña de «{0}».</source>
             <translation>Falta a senha de “{0}”.</translation>
         </message>
@@ -3652,17 +3702,17 @@ Salvar mesmo assim? Com “Salvar como” o original mantém as assinaturas.</tr
     <context>
         <name>Organize</name>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="26" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="27" />
             <source>(protegido)</source>
             <translation>(protegido)</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="31" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="32" />
             <source>1 pág.</source>
             <translation>1 pág.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="31" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="32" />
             <source>{0} págs.</source>
             <translation>{0} págs.</translation>
         </message>
@@ -4464,47 +4514,47 @@ Salvar mesmo assim? Com “Salvar como” o original mantém as assinaturas.</tr
     <context>
         <name>RotateDialog</name>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="298" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="367" />
             <source>Rotar PDF</source>
             <translation>Girar PDF</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="301" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="370" />
             <source>Gira todas las páginas o solo las que indiques.</source>
             <translation>Gira todas as páginas ou apenas as que você indicar.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="304" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="373" />
             <source>Rotar</source>
             <translation>Girar</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="309" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="378" />
             <source>90° a la derecha</source>
             <translation>90° para a direita</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="309" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="378" />
             <source>180°</source>
             <translation>180°</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="309" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="378" />
             <source>90° a la izquierda</source>
             <translation>90° para a esquerda</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="312" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="381" />
             <source>Giro</source>
             <translation>Rotação</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="316" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="385" />
             <source>Páginas</source>
             <translation>Páginas</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="316" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="385" />
             <source>Déjalo vacío para girar todas.</source>
             <translation>Deixe vazio para girar todas.</translation>
         </message>
@@ -5180,58 +5230,58 @@ Salvar mesmo assim? Com “Salvar como” o original mantém as assinaturas.</tr
     <context>
         <name>SplitDialog</name>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="153" />
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="159" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="154" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="160" />
             <source>Dividir PDF</source>
             <translation>Dividir PDF</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="156" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="157" />
             <source>Separa un PDF en varios archivos por rangos, cada cierto número de páginas o página a página.</source>
             <translation>Separa um PDF em vários arquivos por intervalos, a cada certo número de páginas ou página por página.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="164" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="165" />
             <source>Por rangos</source>
             <translation>Por intervalos</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="164" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="165" />
             <source>Cada N páginas</source>
             <translation>A cada N páginas</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="164" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="165" />
             <source>Una por archivo</source>
             <translation>Uma por arquivo</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="166" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="167" />
             <source>Modo</source>
             <translation>Modo</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="172" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="173" />
             <source>Rangos</source>
             <translation>Intervalos</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="173" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="174" />
             <source>Cada rango genera un archivo. Ejemplo: 1-3, 5, 8-10.</source>
             <translation>Cada intervalo gera um arquivo. Exemplo: 1-3, 5, 8-10.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="177" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="178" />
             <source> páginas</source>
             <translation> páginas</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="178" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="179" />
             <source>Páginas por archivo</source>
             <translation>Páginas por arquivo</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="203" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="204" />
             <source>Elige la carpeta de destino.</source>
             <translation>Escolha a pasta de destino.</translation>
         </message>
@@ -6280,22 +6330,22 @@ Salvar mesmo assim? Com “Salvar como” o original mantém as assinaturas.</tr
     <context>
         <name>_SingleSourceDialog</name>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="111" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="112" />
             <source>Documento</source>
             <translation>Documento</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="116" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="117" />
             <source>Guardar como</source>
             <translation>Salvar como</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="116" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="117" />
             <source>Carpeta de destino</source>
             <translation>Pasta de destino</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/organize.py" line="143" />
+            <location filename="../blackpdf/ui/dialogs/organize.py" line="144" />
             <source>Elige un documento.</source>
             <translation>Escolha um documento.</translation>
         </message>

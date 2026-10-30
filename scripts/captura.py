@@ -11,6 +11,7 @@
     --clics "x,y;x,y"       clics en esos puntos de la página (en pt), con la herramienta activa
     --raton x,y             deja el ratón en ese punto (vista previa del sello, cifra de la medida...)
     --dialogo ID            abre el diálogo de esa herramienta (ids de blackpdf/ui/tools.py) y captura solo el diálogo
+    --codigo PYTHON         con --dialogo, código que se ejecuta antes de capturar («dialogo» es el diálogo)
     --desplegable NOMBRE    sellos o escala: abre ese desplegable de la barra de anotación y lo captura
     --claro                 tema claro
     --tamano 1280x800       tamaño de la ventana
@@ -48,6 +49,7 @@ def main() -> int:
     parser.add_argument("--clics", default="")
     parser.add_argument("--raton")
     parser.add_argument("--dialogo")
+    parser.add_argument("--codigo")
     parser.add_argument("--desplegable", choices=("sellos", "escala"))
     parser.add_argument("--claro", action="store_true")
     parser.add_argument("--tamano", default="1280x800")
@@ -132,6 +134,10 @@ def main() -> int:
             target = dialog_class(window, window._context_for(tab), {})
             target.show()
             pump(0.8)
+            if args.codigo:
+                # Para capturar el diálogo en otro estado: marcar una casilla, escribir algo...
+                exec(args.codigo, {"dialogo": target, "ventana": window})
+                pump(0.6)
         elif args.desplegable:
             bar = tab.annotation_bar
             if args.desplegable == "sellos":

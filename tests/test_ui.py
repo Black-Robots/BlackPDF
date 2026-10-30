@@ -297,6 +297,36 @@ def test_tool_dialog_reports_errors(qapp, opened, tmp_path, monkeypatch):
     dialog.close()
 
 
+def test_extract_dialog_one_pdf_per_page_or_range(qapp, opened, tmp_path):
+    window, tab, _ = opened
+    from blackpdf.ui import tools
+
+    dialog = tools.dialog_class("extract")(window, window._context_for(tab), {})
+    assert dialog.output_file_block.isVisibleTo(dialog) and not dialog.output_folder_block.isVisibleTo(dialog)
+    assert not dialog.is_ready(), "en un solo PDF hay que decir qué páginas"
+    dialog.each_page.setChecked(True)
+    assert dialog.is_ready(), "página a página, vacío son todas"
+    assert "Se crearán 4 archivos." in dialog.hint.text()
+    assert not dialog.each_range.isEnabled() and dialog.output_folder_block.isVisibleTo(dialog)
+    assert not dialog.output_file_block.isVisibleTo(dialog)
+    dialog.output_folder.picker.set_path(str(tmp_path / "paginas"))
+    dialog.run()
+    assert wait_until(qapp, lambda: dialog.pages.currentWidget() is dialog.result_panel, 60)
+    assert len(list((tmp_path / "paginas").glob("*.pdf"))) == 4
+    dialog.close()
+
+    dialog = tools.dialog_class("extract")(window, window._context_for(tab), {})
+    dialog.ranges.setText("1-2, 4")
+    dialog.each_range.setChecked(True)
+    assert "Se crearán 2 archivos." in dialog.hint.text()
+    dialog.output_folder.picker.set_path(str(tmp_path / "rangos"))
+    dialog.run()
+    assert wait_until(qapp, lambda: dialog.pages.currentWidget() is dialog.result_panel, 60)
+    made = sorted(tmp_path.joinpath("rangos").glob("*.pdf"))
+    assert [pymupdf.open(p).page_count for p in made] == [2, 1]
+    dialog.close()
+
+
 def test_command_palette_scoring():
     from blackpdf.ui.command_palette import Command, score
 

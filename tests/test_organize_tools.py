@@ -92,3 +92,24 @@ def test_alternate_pdfs_for_double_sided_scan(make_pdf, tmp_path):
     alternate_pdfs(fronts, backs, output, reverse_b=True)
     texts = [p.get_text().split()[0] for p in pymupdf.open(output)]
     assert texts == ["F1", "B3", "F2", "B2", "F3", "B1"]
+
+
+def test_extract_pages_separately(make_pdf, tmp_path):
+    from blackpdf.core.split import extract_pages_separately
+
+    source = make_pdf(pages=12, name="informe.pdf")
+    every = extract_pages_separately(source, "", tmp_path / "todas")
+    assert len(every) == 12 and every[0].name == "informe_1.pdf" and every[-1].name == "informe_12.pdf"
+    assert all(len(pymupdf.open(p)) == 1 for p in every) and page_labels(every[4]) == ["P5"]
+
+    chosen = extract_pages_separately(source, "5, 1-2", tmp_path / "algunas")
+    assert [p.name for p in chosen] == ["informe_5.pdf", "informe_1.pdf", "informe_2.pdf"]
+
+    ranges = extract_pages_separately(source, "1-3, 5-6", tmp_path / "rangos", each="range")
+    assert [p.name for p in ranges] == ["informe_1-3.pdf", "informe_5-6.pdf"]
+    assert page_labels(ranges[0]) == ["P1", "P2", "P3"] and page_labels(ranges[1]) == ["P5", "P6"]
+
+    with pytest.raises(InvalidRangeError):
+        extract_pages_separately(source, "", tmp_path / "nada", each="range")
+    with pytest.raises(InvalidRangeError):
+        extract_pages_separately(source, "13", tmp_path / "fuera")

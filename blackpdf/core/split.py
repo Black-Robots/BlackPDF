@@ -124,3 +124,30 @@ def extract_pages(
         return path
     finally:
         doc.close()
+
+
+EXTRACT_EACH = ("page", "range")
+
+
+def extract_pages_separately(
+    source: PdfSource,
+    spec: str,
+    out_dir: str | os.PathLike,
+    *,
+    each: str = "page",
+    base_name: str | None = None,
+    password: str | None = None,
+    progress: ProgressCallback | None = None,
+) -> list[Path]:
+    """Extrae las páginas indicadas en varios PDF: uno por página o uno por rango.
+
+    Con ``each="page"``, "1-3,5" da cuatro archivos (y vacío, uno por cada página del
+    documento); con ``each="range"``, dos: uno de la 1 a la 3 y otro con la 5.
+    """
+    if each not in EXTRACT_EACH:
+        raise InvalidOptionError(each, option="each")
+    if each == "range":
+        groups_for = lambda count: parse_page_ranges(spec, count)  # noqa: E731
+    else:
+        groups_for = lambda count: [[i] for i in parse_page_selection(spec, count, allow_empty_all=True)]  # noqa: E731
+    return _write_groups(source, groups_for, out_dir, base_name, password, progress)
