@@ -453,167 +453,259 @@
     <context>
         <name>CertificateSignDialog</name>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="64" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="97" />
             <source>Firma digital</source>
             <translation>Signature numérique</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="67" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="100" />
             <source>Firma con tu certificado (FNMT, DNIe, certificado de empresa). Certifica quién firma y garantiza que el documento no se modifica después.</source>
             <translation>Signez avec votre certificat numérique (carte d'identité électronique, certificat qualifié ou d'entreprise). Elle atteste qui a signé et garantit que le document n'est pas modifié ensuite.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="73" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="106" />
             <source>Firmar</source>
             <translation>Signer</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="76" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="109" />
             <source>Vista previa de la página firmada</source>
             <translation>Aperçu de la page signée</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="84" />
-            <source>Archivo .pfx o .p12</source>
-            <translation>Fichier .pfx ou .p12</translation>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="128" />
+            <source>Volver a buscar (por ejemplo, tras meter la tarjeta)</source>
+            <translation>Rechercher à nouveau (par exemple, après avoir inséré la carte)</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="86" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="132" />
+            <source>Aparecen los certificados instalados en Windows, también los de tu DNIe u otra tarjeta con el lector conectado.</source>
+            <translation>Les certificats installés dans Windows apparaissent ici, ainsi que ceux de votre carte d'identité ou d'une autre carte à puce lorsque le lecteur est branché.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="135" />
+            <source>Aparecen los de Firefox, Chrome y Thunderbird, los de tu DNIe u otra tarjeta con el lector conectado y los archivos .pfx o .p12 de Descargas y Documentos.</source>
+            <translation>Ceux de Firefox, Chrome et Thunderbird apparaissent ici, ceux de votre carte d'identité ou d'une autre carte à puce lorsque le lecteur est branché, et les fichiers .pfx ou .p12 de Téléchargements et Documents.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="137" />
             <source>Certificado</source>
             <translation>Certificat</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="86" />
-            <source>Si lo tienes instalado en Windows o en el navegador, expórtalo como archivo .pfx con su clave privada.</source>
-            <translation>S'il est installé dans Windows ou dans le navigateur, exportez-le en fichier .pfx avec sa clé privée.</translation>
-        </message>
-        <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="88" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="138" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="303" />
             <source>Contraseña del certificado</source>
             <translation>Mot de passe du certificat</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="89" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="139" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="303" />
             <source>Contraseña</source>
             <translation>Mot de passe</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="108" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="141" />
+            <source>No volver a pedirla hasta cerrar BlackPDF</source>
+            <translation>Ne plus le demander jusqu'à la fermeture de BlackPDF</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="163" />
             <source>Sello visible</source>
             <translation>Cachet visible</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="108" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="163" />
             <source>Invisible</source>
             <translation>Invisible</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="109" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="164" />
             <source>Apariencia</source>
             <translation>Apparence</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="123" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="178" />
             <source>Última página</source>
             <translation>Dernière page</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="124" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="179" />
             <source>Primera página</source>
             <translation>Première page</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="126" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="181" />
             <source>Incluir mi firma manuscrita</source>
             <translation>Inclure ma signature manuscrite</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="129" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="184" />
             <source>Dibujar o cambiar firma...</source>
             <translation>Dessiner ou changer la signature...</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="134" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="189" />
             <source>Posición</source>
             <translation>Position</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="144" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="199" />
             <source>Ciudad (opcional)</source>
             <translation>Ville (facultatif)</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="145" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="200" />
             <source>Motivo</source>
             <translation>Motif</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="145" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="200" />
             <source>Lugar</source>
             <translation>Lieu</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="146" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="201" />
             <source>Añadir sello de tiempo de un servidor de confianza (requiere conexión)</source>
             <translation>Ajouter un horodatage d'un serveur de confiance (connexion requise)</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="160" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="215" />
             <source>Página actual</source>
             <translation>Page actuelle</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="174" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="224" />
+            <source>Buscando tus certificados...</source>
+            <translation>Recherche de vos certificats...</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="263" />
+            <source>No hay certificados en este equipo</source>
+            <translation>Aucun certificat sur cet ordinateur</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="265" />
+            <source>Buscar un archivo .pfx o .p12...</source>
+            <translation>Rechercher un fichier .pfx ou .p12...</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="288" />
+            <source>Elige tu certificado</source>
+            <translation>Choisissez votre certificat</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="304" />
+            <source>Contraseña principal</source>
+            <translation>Mot de passe principal</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="304" />
+            <source>La que protege los certificados del navegador</source>
+            <translation>Celui qui protège les certificats du navigateur</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="305" />
+            <source>PIN</source>
+            <translation>Code PIN</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="305" />
+            <source>PIN de la tarjeta</source>
+            <translation>Code PIN de la carte</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="323" />
+            <source>No hemos encontrado certificados en este equipo. Si tienes uno en un archivo .pfx o .p12, elige «Buscar un archivo .pfx o .p12».</source>
+            <translation>Aucun certificat trouvé sur cet ordinateur. Si vous en avez un dans un fichier .pfx ou .p12, choisissez « Rechercher un fichier .pfx ou .p12 ».</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="336" />
+            <source>El archivo ya no está en su sitio.</source>
+            <translation>Le fichier n'est plus à son emplacement.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="340" />
             <source>Escribe la contraseña del certificado.</source>
             <translation>Saisissez le mot de passe du certificat.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="180" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="346" />
             <source>La contraseña no es correcta o el archivo no es un certificado.</source>
             <translation>Le mot de passe est incorrect ou le fichier n'est pas un certificat.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="184" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="350" />
             <source>El archivo no contiene un certificado con clave privada.</source>
             <translation>Le fichier ne contient pas de certificat avec clé privée.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="188" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="354" />
             <source>No se ha podido leer el certificado.</source>
             <translation>Impossible de lire le certificat.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="193" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="363" />
+            <source>En tu tarjeta, a través de Windows: te pedirá el PIN al firmar.</source>
+            <translation>Sur votre carte, via Windows : il vous demandera le code PIN au moment de signer.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="364" />
+            <source>Instalado en Windows.</source>
+            <translation>Installé dans Windows.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="366" />
+            <source>Guardado en {0}.</source>
+            <translation>Enregistré dans {0}.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="368" />
+            <source>En la tarjeta «{0}».</source>
+            <translation>Sur la carte « {0} ».</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="369" />
+            <source>Archivo «{0}» en {1}.</source>
+            <translation>Fichier « {0} » dans {1}.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="373" />
             <source>Emitido por {0}</source>
             <translation>Émis par {0}</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="195" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="375" />
             <source>Caducó el {0}: no se puede usar para firmar.</source>
             <translation>Expiré le {0} : il ne peut pas servir à signer.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="198" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="378" />
             <source>Válido hasta el {0}</source>
             <translation>Valable jusqu'au {0}</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="244" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="424" />
             <source>Nombre del titular</source>
             <translation>Nom du titulaire</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="262" />
-            <source>Elige tu certificado y escribe su contraseña.</source>
-            <translation>Choisissez votre certificat et saisissez son mot de passe.</translation>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="446" />
+            <source>Elige tu certificado.</source>
+            <translation>Choisissez votre certificat.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="287" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="448" />
+            <source>Escribe la contraseña o el PIN.</source>
+            <translation>Saisissez le mot de passe ou le code PIN.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="488" />
             <source>Documento firmado</source>
             <translation>Document signé</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="287" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="488" />
             <source>Se ha guardado «{0}». Cualquier cambio posterior en ese archivo invalidará la firma.</source>
             <translation>« {0} » a été enregistré. Toute modification ultérieure de ce fichier invalidera la signature.</translation>
         </message>
@@ -1779,238 +1871,320 @@ Enregistrer quand même ? Avec « Enregistrer sous », l'original conserve ses s
     <context>
         <name>Errors</name>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="47" />
+            <location filename="../blackpdf/ui/errors.py" line="48" />
             <source>el documento</source>
             <translation>le document</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="55" />
+            <location filename="../blackpdf/ui/errors.py" line="56" />
             <source>Documento protegido</source>
             <translation>Document protégé</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="55" />
+            <location filename="../blackpdf/ui/errors.py" line="56" />
             <source>«{0}» está protegido con contraseña.</source>
             <translation>« {0} » est protégé par un mot de passe.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="57" />
+            <location filename="../blackpdf/ui/errors.py" line="58" />
+            <location filename="../blackpdf/ui/errors.py" line="142" />
+            <location filename="../blackpdf/ui/errors.py" line="143" />
             <source>Contraseña incorrecta</source>
             <translation>Mot de passe incorrect</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="57" />
+            <location filename="../blackpdf/ui/errors.py" line="58" />
             <source>La contraseña no es correcta. Inténtalo de nuevo.</source>
             <translation>Le mot de passe n'est pas correct. Réessayez.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="59" />
+            <location filename="../blackpdf/ui/errors.py" line="60" />
             <source>No se puede abrir el archivo</source>
             <translation>Impossible d'ouvrir le fichier</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="59" />
+            <location filename="../blackpdf/ui/errors.py" line="60" />
             <source>No se ha podido leer «{0}». Comprueba que existe y que tienes permiso para abrirlo.</source>
             <translation>Impossible de lire « {0} ». Vérifiez qu'il existe et que vous avez l'autorisation de l'ouvrir.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="63" />
+            <location filename="../blackpdf/ui/errors.py" line="64" />
             <source>Formato no compatible</source>
             <translation>Format non pris en charge</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="63" />
+            <location filename="../blackpdf/ui/errors.py" line="64" />
             <source>«{0}» no es un PDF válido o está dañado y no se puede recuperar.</source>
             <translation>« {0} » n'est pas un PDF valide ou il est endommagé et ne peut pas être récupéré.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="68" />
+            <location filename="../blackpdf/ui/errors.py" line="69" />
             <source>Rango de páginas no válido</source>
             <translation>Plage de pages non valide</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="68" />
+            <location filename="../blackpdf/ui/errors.py" line="69" />
             <source>Escribe páginas entre 1 y {0}, separadas por comas. Ejemplo: 1-3, 5, 8-10.</source>
             <translation>Saisissez des pages entre 1 et {0}, séparées par des virgules. Exemple : 1-3, 5, 8-10.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="72" />
+            <location filename="../blackpdf/ui/errors.py" line="73" />
             <source>No se puede eliminar</source>
             <translation>Suppression impossible</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="72" />
+            <location filename="../blackpdf/ui/errors.py" line="73" />
             <source>Un PDF debe conservar al menos una página.</source>
             <translation>Un PDF doit conserver au moins une page.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="74" />
+            <location filename="../blackpdf/ui/errors.py" line="75" />
             <source>Falta información</source>
             <translation>Informations manquantes</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="74" />
+            <location filename="../blackpdf/ui/errors.py" line="75" />
             <source>Selecciona al menos un archivo o una página para continuar.</source>
             <translation>Sélectionnez au moins un fichier ou une page pour continuer.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="76" />
+            <location filename="../blackpdf/ui/errors.py" line="77" />
             <source>No se puede guardar</source>
             <translation>Enregistrement impossible</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="76" />
+            <location filename="../blackpdf/ui/errors.py" line="77" />
             <source>No se ha podido escribir «{0}». Comprueba que la carpeta existe, que hay espacio libre y que el archivo no está abierto en otro programa.</source>
             <translation>Impossible d'écrire « {0} ». Vérifiez que le dossier existe, qu'il reste de l'espace libre et que le fichier n'est pas ouvert dans un autre programme.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="81" />
+            <location filename="../blackpdf/ui/errors.py" line="82" />
             <source>No se pueden conservar las firmas</source>
             <translation>Impossible de conserver les signatures</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="81" />
+            <location filename="../blackpdf/ui/errors.py" line="82" />
             <source>Este PDF no admite que se le añadan los cambios al final, así que habría que reescribirlo y sus firmas digitales dejarían de ser válidas. Vuelve a guardar si quieres hacerlo de todos modos.</source>
             <translation>Ce PDF ne permet pas d'ajouter les modifications à la fin : il faudrait le réécrire et ses signatures numériques ne seraient plus valides. Enregistrez à nouveau si vous voulez le faire quand même.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="86" />
+            <location filename="../blackpdf/ui/errors.py" line="87" />
             <source>Reconocimiento de texto no disponible</source>
             <translation>Reconnaissance de texte indisponible</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="86" />
+            <location filename="../blackpdf/ui/errors.py" line="87" />
             <source>Faltan los datos de idioma del reconocimiento de texto. Reinstala BlackPDF para recuperarlos.</source>
             <translation>Les données de langue de la reconnaissance de texte sont absentes. Réinstallez BlackPDF pour les récupérer.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="90" />
+            <location filename="../blackpdf/ui/errors.py" line="91" />
             <source>No se puede leer el archivo de CAD</source>
             <translation>Impossible de lire le fichier CAO</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="90" />
+            <location filename="../blackpdf/ui/errors.py" line="91" />
             <source>Para leer STEP e IGES hace falta el componente de CAD de BlackPDF, que viene en los instaladores. Reinstala BlackPDF o exporta la pieza como STL u OBJ.</source>
             <translation>La lecture des fichiers STEP et IGES nécessite le composant CAO de BlackPDF, fourni avec les programmes d'installation. Réinstallez BlackPDF ou exportez la pièce en STL ou OBJ.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="95" />
+            <location filename="../blackpdf/ui/errors.py" line="96" />
             <source>Modelo 3D vacío</source>
             <translation>Modèle 3D vide</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="95" />
+            <location filename="../blackpdf/ui/errors.py" line="96" />
             <source>El modelo 3D no contiene piezas visibles.</source>
             <translation>Le modèle 3D ne contient aucune pièce visible.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="97" />
+            <location filename="../blackpdf/ui/errors.py" line="98" />
             <source>No se puede abrir el modelo 3D</source>
             <translation>Impossible d'ouvrir le modèle 3D</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="97" />
+            <location filename="../blackpdf/ui/errors.py" line="98" />
             <source>El modelo 3D está dañado o usa una variante del formato que BlackPDF todavía no puede mostrar.</source>
             <translation>Le modèle 3D est endommagé ou utilise une variante du format que BlackPDF ne sait pas encore afficher.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="101" />
+            <location filename="../blackpdf/ui/errors.py" line="102" />
             <source>No se puede comprobar</source>
             <translation>Vérification impossible</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="101" />
+            <location filename="../blackpdf/ui/errors.py" line="102" />
             <source>No se ha podido consultar si hay una versión nueva. Comprueba tu conexión a internet e inténtalo más tarde.</source>
             <translation>Impossible de vérifier s'il existe une nouvelle version. Vérifiez votre connexion Internet et réessayez plus tard.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="106" />
+            <location filename="../blackpdf/ui/errors.py" line="107" />
             <source>Descarga descartada</source>
             <translation>Téléchargement rejeté</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="106" />
+            <location filename="../blackpdf/ui/errors.py" line="107" />
             <source>El archivo descargado no coincide con el publicado y se ha borrado por seguridad. Inténtalo de nuevo más tarde.</source>
             <translation>Le fichier téléchargé ne correspond pas à celui qui a été publié et a été supprimé par sécurité. Réessayez plus tard.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="111" />
+            <location filename="../blackpdf/ui/errors.py" line="112" />
             <source>No se ha podido descargar</source>
             <translation>Échec du téléchargement</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="111" />
+            <location filename="../blackpdf/ui/errors.py" line="112" />
             <source>La descarga de la versión nueva se ha interrumpido. Comprueba tu conexión e inténtalo de nuevo.</source>
             <translation>Le téléchargement de la nouvelle version a été interrompu. Vérifiez votre connexion et réessayez.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="115" />
+            <location filename="../blackpdf/ui/errors.py" line="119" />
             <source>Opción no válida</source>
             <translation>Option non valide</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="115" />
+            <location filename="../blackpdf/ui/errors.py" line="119" />
             <source>Revisa las opciones marcadas e inténtalo de nuevo.</source>
             <translation>Vérifiez les options cochées et réessayez.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="117" />
+            <location filename="../blackpdf/ui/errors.py" line="121" />
             <source>No se ha podido completar</source>
             <translation>Opération impossible</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="117" />
+            <location filename="../blackpdf/ui/errors.py" line="121" />
             <source>La operación no se ha podido completar.</source>
             <translation>L'opération n'a pas pu être effectuée.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="119" />
+            <location filename="../blackpdf/ui/errors.py" line="123" />
             <source>Memoria insuficiente</source>
             <translation>Mémoire insuffisante</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="119" />
+            <location filename="../blackpdf/ui/errors.py" line="123" />
             <source>El documento es demasiado grande para la memoria disponible.</source>
             <translation>Le document est trop volumineux pour la mémoire disponible.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="121" />
+            <location filename="../blackpdf/ui/errors.py" line="125" />
             <source>Permiso denegado</source>
             <translation>Autorisation refusée</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="121" />
+            <location filename="../blackpdf/ui/errors.py" line="125" />
             <source>No tienes permiso para acceder a ese archivo o carpeta.</source>
             <translation>Vous n'avez pas l'autorisation d'accéder à ce fichier ou dossier.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="123" />
+            <location filename="../blackpdf/ui/errors.py" line="127" />
             <source>Error de archivo</source>
             <translation>Erreur de fichier</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="123" />
+            <location filename="../blackpdf/ui/errors.py" line="127" />
             <source>No se ha podido acceder al archivo. Comprueba la ruta y los permisos.</source>
             <translation>Impossible d'accéder au fichier. Vérifiez le chemin et les autorisations.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="124" />
-            <location filename="../blackpdf/ui/errors.py" line="147" />
+            <location filename="../blackpdf/ui/errors.py" line="128" />
+            <location filename="../blackpdf/ui/errors.py" line="184" />
             <source>Error inesperado</source>
             <translation>Erreur inattendue</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="124" />
+            <location filename="../blackpdf/ui/errors.py" line="128" />
             <source>Ha ocurrido un error inesperado. Los detalles se han guardado en el registro de la aplicación.</source>
             <translation>Une erreur inattendue s'est produite. Les détails ont été enregistrés dans le journal de l'application.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="148" />
+            <location filename="../blackpdf/ui/errors.py" line="139" />
+            <source>PIN incorrecto</source>
+            <translation>Code PIN incorrect</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/errors.py" line="139" />
+            <source>El PIN de la tarjeta no es correcto. Cuidado: tras varios intentos fallidos, la tarjeta se bloquea.</source>
+            <translation>Le code PIN de la carte n'est pas correct. Attention : après plusieurs tentatives infructueuses, la carte se bloque.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/errors.py" line="142" />
+            <source>La contraseña principal del navegador no es correcta.</source>
+            <translation>Le mot de passe principal du navigateur n'est pas correct.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/errors.py" line="143" />
+            <source>La contraseña del certificado no es correcta.</source>
+            <translation>Le mot de passe du certificat n'est pas correct.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/errors.py" line="147" />
+            <source>Firma cancelada</source>
+            <translation>Signature annulée</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/errors.py" line="147" />
+            <source>Se ha cancelado la petición del PIN: el documento no se ha firmado.</source>
+            <translation>La demande de code PIN a été annulée : le document n'a pas été signé.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/errors.py" line="149" />
+            <source>Tarjeta bloqueada</source>
+            <translation>Carte bloquée</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/errors.py" line="149" />
+            <source>El PIN está bloqueado por demasiados intentos fallidos. Para desbloquearlo, acude a quien te dio la tarjeta (el DNIe, en un punto de actualización de una comisaría).</source>
+            <translation>Le code PIN est bloqué après trop de tentatives infructueuses. Pour le débloquer, adressez-vous à l'organisme qui vous a remis la carte.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/errors.py" line="153" />
+            <source>No se encuentra la tarjeta</source>
+            <translation>Carte introuvable</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/errors.py" line="153" />
+            <source>Conecta el lector, mete la tarjeta y vuelve a intentarlo.</source>
+            <translation>Branchez le lecteur, insérez la carte et réessayez.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/errors.py" line="155" />
+            <source>No se puede usar el certificado</source>
+            <translation>Impossible d'utiliser le certificat</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/errors.py" line="155" />
+            <source>No se ha podido usar la clave privada del certificado. Comprueba que sigue instalado.</source>
+            <translation>Impossible d'utiliser la clé privée du certificat. Vérifiez qu'il est toujours installé.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/errors.py" line="158" />
+            <source>Certificado no válido</source>
+            <translation>Certificat non valide</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/errors.py" line="158" />
+            <source>El certificado está caducado, aún no es válido o no tiene su clave privada.</source>
+            <translation>Le certificat a expiré, n'est pas encore valide ou n'a pas sa clé privée.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/errors.py" line="161" />
+            <source>Sin sello de tiempo</source>
+            <translation>Pas d'horodatage</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/errors.py" line="161" />
+            <source>No se ha podido conectar con el servidor del sello de tiempo. Comprueba tu conexión o firma sin él.</source>
+            <translation>Impossible de se connecter au serveur d'horodatage. Vérifiez votre connexion ou signez sans horodatage.</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/errors.py" line="185" />
             <source>No se ha podido completar la operación</source>
             <translation>L'opération n'a pas pu être effectuée</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/errors.py" line="150" />
+            <location filename="../blackpdf/ui/errors.py" line="187" />
             <source>Puede que el archivo esté dañado o use una característica no compatible. Los detalles se han guardado en el registro.</source>
             <translation>Le fichier est peut-être endommagé ou utilise une fonction non prise en charge. Les détails ont été enregistrés dans le journal.</translation>
         </message>
@@ -4963,142 +5137,157 @@ Enregistrer quand même ? Avec « Enregistrer sous », l'original conserve ses s
     <context>
         <name>Signatures</name>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="48" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="53" />
             <source>Certificados digitales (*.p12 *.pfx)</source>
             <translation>Certificats numériques (*.p12 *.pfx)</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="52" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="66" />
+            <source>Tarjeta «{0}»</source>
+            <translation>Carte « {0} »</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="66" />
+            <source>Tarjeta</source>
+            <translation>Carte</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="71" />
+            <source>{0} (perfil {1})</source>
+            <translation>{0} (profil {1})</translation>
+        </message>
+        <message>
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="85" />
             <source>Soy el autor de este documento</source>
             <translation>Je suis l'auteur de ce document</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="53" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="86" />
             <source>He revisado este documento</source>
             <translation>J'ai relu ce document</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="54" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="87" />
             <source>Apruebo este documento</source>
             <translation>J'approuve ce document</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="55" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="88" />
             <source>Conforme con el contenido</source>
             <translation>Conforme au contenu</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="297" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="498" />
             <source>Firmado digitalmente por</source>
             <translation>Signé numériquement par</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="298" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="499" />
             <source>Fecha: {0}</source>
             <translation>Date : {0}</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="299" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="500" />
             <source>Motivo: {0}</source>
             <translation>Motif : {0}</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="300" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="501" />
             <source>Lugar: {0}</source>
             <translation>Lieu : {0}</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="307" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="508" />
             <source>Nombre</source>
             <translation>Nom</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="308" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="509" />
             <source>Nombre de pila</source>
             <translation>Prénom</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="309" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="510" />
             <source>Apellidos</source>
             <translation>Nom de famille</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="310" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="511" />
             <source>Número de serie</source>
             <translation>Numéro de série</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="311" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="512" />
             <source>Organización</source>
             <translation>Organisation</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="312" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="513" />
             <source>Unidad</source>
             <translation>Unité</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="313" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="514" />
             <source>Identificador de la organización</source>
             <translation>Identifiant de l'organisation</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="314" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="515" />
             <source>Cargo</source>
             <translation>Fonction</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="315" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="516" />
             <source>Correo</source>
             <translation>E-mail</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="316" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="517" />
             <source>Localidad</source>
             <translation>Localité</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="317" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="518" />
             <source>Provincia</source>
             <translation>Région ou province</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="318" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="519" />
             <source>País</source>
             <translation>Pays</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="334" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="535" />
             <source>firmante desconocido</source>
             <translation>signataire inconnu</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="336" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="537" />
             <source>La firma de {0} no es válida: el documento se ha modificado después de firmarse.</source>
             <translation>La signature de {0} n'est pas valide : le document a été modifié après sa signature.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="338" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="539" />
             <source>Firmado por {0}, pero se hicieron cambios después de la firma.</source>
             <translation>Signé par {0}, mais des modifications ont été faites après la signature.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="341" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="542" />
             <source>Firmado por {0}. Después se han añadido comentarios (permitido), pero el certificado no procede de una entidad de confianza reconocida.</source>
             <translation>Signé par {0}. Des commentaires ont été ajoutés ensuite (autorisé), mais le certificat ne provient pas d'une autorité de confiance reconnue.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="344" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="545" />
             <source>Firmado por {0}. El documento no se ha modificado, pero el certificado no procede de una entidad de confianza reconocida.</source>
             <translation>Signé par {0}. Le document n'a pas été modifié, mais le certificat ne provient pas d'une autorité de confiance reconnue.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="348" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="549" />
             <source>Firmado por {0}. La firma es válida; después se han añadido comentarios.</source>
             <translation>Signé par {0}. La signature est valide ; des commentaires ont été ajoutés ensuite.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="349" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="550" />
             <source>Firmado por {0}. La firma es válida y el documento no se ha modificado.</source>
             <translation>Signé par {0}. La signature est valide et le document n'a pas été modifié.</translation>
         </message>
@@ -5106,73 +5295,73 @@ Enregistrer quand même ? Avec « Enregistrer sous », l'original conserve ses s
     <context>
         <name>SignaturesDialog</name>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="360" />
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="365" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="561" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="566" />
             <source>Firmas del documento</source>
             <translation>Signatures du document</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="378" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="579" />
             <source>La comprobación se hace sin conexión: no se consulta si el certificado ha sido revocado.</source>
             <translation>La vérification se fait hors ligne : la révocation du certificat n'est pas contrôlée.</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="383" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="584" />
             <source>Cerrar</source>
             <translation>Fermer</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="402" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="603" />
             <source>Firmante</source>
             <translation>Signataire</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="403" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="604" />
             <source>Emisor del certificado</source>
             <translation>Émetteur du certificat</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="404" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="605" />
             <source>Fecha de la firma</source>
             <translation>Date de la signature</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="408" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="609" />
             <source>Motivo</source>
             <translation>Motif</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="410" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="611" />
             <source>Lugar</source>
             <translation>Lieu</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="420" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="621" />
             <source>Comprobaciones</source>
             <translation>Vérifications</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="422" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="623" />
             <source>El contenido firmado no ha cambiado</source>
             <translation>Le contenu signé n'a pas changé</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="423" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="624" />
             <source>La firma criptográfica es correcta</source>
             <translation>La signature cryptographique est correcte</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="424" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="625" />
             <source>Certificado de una entidad de confianza</source>
             <translation>Certificat d'une autorité de confiance</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="425" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="626" />
             <source>Sin cambios no permitidos después de firmar</source>
             <translation>Aucune modification non autorisée après la signature</translation>
         </message>
         <message>
-            <location filename="../blackpdf/ui/dialogs/certificate.py" line="436" />
+            <location filename="../blackpdf/ui/dialogs/certificate.py" line="637" />
             <source>Ir a la firma</source>
             <translation>Aller à la signature</translation>
         </message>

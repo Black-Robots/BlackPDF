@@ -35,6 +35,11 @@ Términos de la interfaz tal como ya están traducidos. Si un texto nuevo usa un
 | Firma / Firmar PDF | Signature / Sign PDF | Assinatura / Assinar PDF | Signature / Signer un PDF |
 | Firma digital / Certificado | Digital signature / Certificate | Assinatura digital / Certificado | Signature numérique / Certificat |
 | Contraseña | Password | Senha | Mot de passe |
+| Contraseña principal (del navegador) | Primary password | Senha principal | Mot de passe principal |
+| PIN (de la tarjeta) | PIN | PIN | Code PIN |
+| Tarjeta (DNIe, con lector) | Card / smart card | Cartão | Carte (à puce) |
+| DNIe | ID card | Cartão | Carte d'identité |
+| Sello de tiempo | Timestamp | Carimbo de tempo | Horodatage |
 | Desbloquear | Unlock | Desbloquear | Déverrouiller |
 | Comprimir | Compress | Comprimir | Compresser |
 | Unir PDF / Dividir PDF | Merge PDF / Split PDF | Juntar PDF / Dividir PDF | Fusionner des PDF / Diviser un PDF |

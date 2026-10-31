@@ -626,15 +626,38 @@ def test_signed_document_banner_and_safe_save(qapp, window, tmp_path):
     assert list_signatures(signed)[0].intact
 
 
-def test_certificate_dialog_signs_current_document(qapp, opened, tmp_path):
+def _search_certificates_in(monkeypatch, home):
+    """Los certificados se buscan en una carpeta personal de prueba, no en la de verdad."""
+    from blackpdf.core import certstore
+    from blackpdf.ui.dialogs import certificate
+
+    original = certstore.list_identities
+    monkeypatch.setattr(certstore, "list_identities", lambda files=(), folders=(): original(files, (), home=str(home)))
+    monkeypatch.setattr(certificate, "search_folders", lambda: [])
+
+
+def _sign_dialog(qapp, window, tab):
+    from blackpdf.ui import tools
+
+    dialog = tools.dialog_class("sign_certificate")(window, window._context_for(tab), {})
+    assert wait_until(qapp, lambda: dialog.certificate.isEnabled(), 30), "termina de buscar certificados"
+    return dialog
+
+
+def test_certificate_dialog_signs_current_document(qapp, opened, tmp_path, monkeypatch):
     from tests.test_signatures import PASSWORD, make_certificate
     from blackpdf.core.signatures import list_signatures
-    from blackpdf.ui import tools
+    from blackpdf.ui.dialogs import certificate
+    from blackpdf.ui.settings import settings
 
     window, tab, _ = opened
     cert = make_certificate(tmp_path / "yo.p12")
-    dialog = tools.dialog_class("sign_certificate")(window, window._context_for(tab), {})
-    dialog.certificate.set_path(str(cert))
+    _search_certificates_in(monkeypatch, tmp_path / "casa")
+    dialog = _sign_dialog(qapp, window, tab)
+    assert dialog.identity() is None and "No hemos encontrado" in dialog.cert_text.text()
+    dialog.use_file(str(cert))
+    assert dialog.identity().source == "file" and dialog.password_block.isVisibleTo(dialog)
+    assert not dialog.is_ready(), "hace falta la contraseña del archivo"
     dialog.cert_password.edit.setText(PASSWORD)
     dialog._check_certificate()
     assert dialog.is_ready() and "GARCÍA" in dialog.cert_text.text()
@@ -644,6 +667,52 @@ def test_certificate_dialog_signs_current_document(qapp, opened, tmp_path):
     assert wait_until(qapp, lambda: dialog.pages.currentWidget() is dialog.result_panel, 90)
     status = list_signatures(output)[0]
     assert status.intact and status.valid and status.covers_whole_file
+    dialog.close()
+    assert "GARCÍA" in settings().signing_files()[str(cert.resolve())]
+
+    # La próxima vez está elegido, con su titular, y la contraseña no se vuelve a pedir.
+    dialog = _sign_dialog(qapp, window, tab)
+    assert dialog.identity().location == str(cert.resolve())
+    assert "GARCÍA" in dialog.certificate.currentText() and dialog.is_ready()
+    dialog.close()
+    certificate._SESSION_SECRETS.clear()
+    settings().forget_signing_file(str(cert.resolve()))
+
+
+def test_certificate_dialog_uses_browser_certificates(qapp, opened, tmp_path, monkeypatch):
+    from tests.test_certstore import _identity_files, _nss_database, _nss_tool
+    from blackpdf.core import certstore
+    from blackpdf.core.signatures import list_signatures
+
+    if not sys.platform.startswith("linux") or not _nss_tool("pk12util") or not certstore.softokn_path():
+        pytest.skip("hacen falta NSS y sus herramientas (libnss3-tools)")
+    window, tab, _ = opened
+    home = tmp_path / "casa"
+    p12, _, _ = _identity_files(tmp_path)
+    _nss_database(home / ".pki" / "nssdb", p12)
+    _nss_database(home / ".thunderbird" / "x.default", p12, primary_password="principal")
+    _search_certificates_in(monkeypatch, home)
+    dialog = _sign_dialog(qapp, window, tab)
+    chrome = next(i for i, identity in enumerate(dialog._identities) if identity.origin == "chrome")
+    dialog.certificate.setCurrentIndex(chrome)
+    assert "PÉREZ RUIZ ANA" in dialog.certificate.currentText() and "Chrome" in dialog.certificate.currentText()
+    assert not dialog.password_block.isVisibleTo(dialog) and dialog.is_ready(), "Chrome no pide nada"
+    assert "Guardado en Chrome" in dialog.cert_text.text()
+    output = tmp_path / "firmado.pdf"
+    dialog.output.picker.set_path(str(output))
+    dialog.run()
+    assert wait_until(qapp, lambda: dialog.pages.currentWidget() is dialog.result_panel, 90)
+    assert list_signatures(output)[0].valid
+    dialog.close()
+
+    dialog = _sign_dialog(qapp, window, tab)
+    assert dialog.identity().origin == "chrome", "el último usado"
+    dialog.certificate.setCurrentIndex(next(i for i, identity in enumerate(dialog._identities)
+                                            if identity.origin == "thunderbird"))
+    assert dialog.password_block.isVisibleTo(dialog) and dialog.password_caption.text() == "Contraseña principal"
+    assert not dialog.is_ready()
+    dialog.cert_password.edit.setText("principal")
+    assert dialog.is_ready()
     dialog.close()
 
 

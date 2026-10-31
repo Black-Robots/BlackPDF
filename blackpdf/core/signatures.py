@@ -5,9 +5,10 @@ del documento, hecha con la clave privada del certificado (FNMT, DNIe,
 certificados de empresa...). Cualquiera puede comprobar quién firmó y si el
 documento se ha modificado después.
 
-Se usa pyHanko. El certificado se lee de un archivo PKCS#12 (.pfx / .p12)
-protegido con contraseña. La apariencia visible se dibuja con PyMuPDF y la
-fuente Inter para que acentos y eñes se vean bien.
+Se usa pyHanko. El certificado puede ser un archivo PKCS#12 (.pfx / .p12)
+protegido con contraseña o uno del equipo (almacén de Windows, Firefox,
+Chrome, tarjetas): ver certstore. La apariencia visible se dibuja con PyMuPDF
+y la fuente Inter para que acentos y eñes se vean bien.
 """
 
 from __future__ import annotations
@@ -22,6 +23,15 @@ from pathlib import Path
 
 import pymupdf
 
+from .certstore import (  # noqa: F401  (se importan desde aquí en el resto del programa)
+    CertificateAccessError,
+    CertificateError,
+    CertificateInfo,
+    CertificatePasswordError,
+    Identity,
+    load_certificate,
+    open_signer,
+)
 from .document import PdfSource, open_pdf, read_file
 from .errors import BlackPdfError, InvalidOptionError, WriteError
 from .files import atomic_write
@@ -39,81 +49,12 @@ STAMP_MARGIN = 36.0
 POSITIONS = ("top-left", "top-right", "bottom-left", "bottom-right")
 
 
-class CertificatePasswordError(BlackPdfError):
-    """La contraseña del certificado no es correcta o el archivo no es un certificado."""
-
-
-class CertificateError(BlackPdfError):
-    """El certificado no sirve para firmar (caducado, sin clave privada...)."""
-
-
 class TimestampError(BlackPdfError):
     """No se pudo obtener el sello de tiempo (sin conexión o servidor caído)."""
 
 
 class SignatureError(BlackPdfError):
     """La firma no se pudo aplicar al documento."""
-
-
-# ======================================================================
-# Certificados
-# ======================================================================
-@dataclass(frozen=True)
-class CertificateInfo:
-    name: str
-    """Nombre común del titular (CN)."""
-    organization: str
-    serial: str
-    """Número de serie del titular (en certificados españoles, el NIF: IDCES-...)."""
-    issuer: str
-    valid_from: dt.datetime
-    valid_to: dt.datetime
-
-    @property
-    def expired(self) -> bool:
-        return dt.datetime.now(dt.timezone.utc) > self.valid_to
-
-    @property
-    def not_yet_valid(self) -> bool:
-        return dt.datetime.now(dt.timezone.utc) < self.valid_from
-
-
-def _certificate_bytes(certificate: str | os.PathLike | bytes) -> bytes:
-    if isinstance(certificate, (bytes, bytearray)):
-        return bytes(certificate)
-    return read_file(certificate)
-
-
-def _name_part(name, oid) -> str:
-    try:
-        values = name.get_attributes_for_oid(oid)
-    except Exception:
-        return ""
-    return str(values[0].value) if values else ""
-
-
-def load_certificate(certificate: str | os.PathLike | bytes, password: str) -> CertificateInfo:
-    """Abre el certificado con su contraseña y devuelve los datos del titular."""
-    from cryptography.hazmat.primitives.serialization import pkcs12
-    from cryptography.x509.oid import NameOID
-
-    data = _certificate_bytes(certificate)
-    try:
-        key, cert, _ = pkcs12.load_key_and_certificates(data, password.encode("utf-8") if password else None)
-    except ValueError as exc:
-        raise CertificatePasswordError(str(exc)) from exc
-    if cert is None or key is None:
-        raise CertificateError("el archivo no contiene un certificado con clave privada")
-    subject, issuer = cert.subject, cert.issuer
-    return CertificateInfo(
-        name=_name_part(subject, NameOID.COMMON_NAME) or subject.rfc4514_string(),
-        organization=_name_part(subject, NameOID.ORGANIZATION_NAME),
-        serial=_name_part(subject, NameOID.SERIAL_NUMBER),
-        issuer=_name_part(issuer, NameOID.COMMON_NAME) or _name_part(issuer, NameOID.ORGANIZATION_NAME)
-        or issuer.rfc4514_string(),
-        valid_from=cert.not_valid_before_utc,
-        valid_to=cert.not_valid_after_utc,
-    )
 
 
 # ======================================================================
@@ -263,32 +204,35 @@ def _source_bytes(source: PdfSource, password: str | None) -> bytes:
 def sign_pdf(
     source: PdfSource,
     output: str | os.PathLike,
-    certificate: str | os.PathLike | bytes,
+    certificate: str | os.PathLike | bytes | Identity,
     certificate_password: str,
     options: SignOptions | None = None,
     *,
     password: str | None = None,
     progress: ProgressCallback | None = None,
 ) -> Path:
-    """Firma el documento y lo guarda en `output` (nunca sobre el original)."""
+    """Firma el documento y lo guarda en `output` (nunca sobre el original).
+
+    ``certificate`` es un archivo .pfx/.p12 (ruta o bytes) o un certificado del equipo
+    (``Identity``); ``certificate_password``, su contraseña o el PIN, si hacen falta.
+    """
+    report(progress, 0, 4)
+    with open_signer(certificate, certificate_password) as (signer, info):
+        result = _sign_with(source, signer, info, options or SignOptions(), password, progress)
+    report(progress, 3, 4)
+    try:
+        path = atomic_write(output, lambda tmp: Path(tmp).write_bytes(result))
+    except OSError as exc:
+        raise WriteError(str(exc), path=str(output)) from exc
+    report(progress, 4, 4)
+    return path
+
+
+def _sign_with(source: PdfSource, signer, info: CertificateInfo, options: SignOptions, password: str | None,
+               progress: ProgressCallback | None) -> bytes:
     from pyhanko import stamp
     from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
     from pyhanko.sign import fields, signers
-
-    options = options or SignOptions()
-    report(progress, 0, 4)
-    info = load_certificate(certificate, certificate_password)
-    if info.expired:
-        raise CertificateError("certificado caducado", valid_to=info.valid_to.isoformat())
-    if info.not_yet_valid:
-        raise CertificateError("certificado aún no válido", valid_from=info.valid_from.isoformat())
-    try:
-        signer = signers.SimpleSigner.load_pkcs12_data(
-            _certificate_bytes(certificate), other_certs=None,
-            passphrase=certificate_password.encode("utf-8") if certificate_password else None,
-        )
-    except ValueError as exc:
-        raise CertificatePasswordError(str(exc)) from exc
 
     data = _source_bytes(source, password)
     doc = pymupdf.open(stream=data, filetype="pdf")
@@ -341,20 +285,18 @@ def sign_pdf(
         result = io.BytesIO()
         try:
             pdf_signer.sign_pdf(writer, output=result)
+        except BlackPdfError:
+            raise  # La tarjeta o el almacén ya han dicho qué pasa (PIN, cancelado...).
         except Exception as exc:
+            if isinstance(exc.__cause__ or exc.__context__, BlackPdfError):
+                raise (exc.__cause__ or exc.__context__) from exc
             if timestamper is not None and _looks_like_network(exc):
                 raise TimestampError(str(exc), url=options.timestamp_url) from exc
             raise SignatureError(str(exc)) from exc
     finally:
         if appearance_file:
             Path(appearance_file).unlink(missing_ok=True)
-    report(progress, 3, 4)
-    try:
-        path = atomic_write(output, lambda tmp: Path(tmp).write_bytes(result.getvalue()))
-    except OSError as exc:
-        raise WriteError(str(exc), path=str(output)) from exc
-    report(progress, 4, 4)
-    return path
+    return result.getvalue()
 
 
 def _looks_like_network(exc: BaseException) -> bool:

@@ -15,6 +15,7 @@ from pathlib import Path
 from PySide6.QtCore import QCoreApplication, QStandardPaths
 from PySide6.QtWidgets import QApplication, QMessageBox, QWidget
 
+from ..core import certstore
 from ..core import errors as core_errors
 
 log = logging.getLogger("blackpdf")
@@ -111,6 +112,9 @@ def user_message(exc: BaseException) -> tuple[str, str]:
         return _tr("No se ha podido descargar"), _tr(
             "La descarga de la versión nueva se ha interrumpido. Comprueba tu conexión e inténtalo de nuevo."
         )
+    signing = _signing_message(exc, params)
+    if signing is not None:
+        return signing
     if isinstance(exc, core_errors.InvalidOptionError):
         return _tr("Opción no válida"), _tr("Revisa las opciones marcadas e inténtalo de nuevo.")
     if isinstance(exc, core_errors.BlackPdfError):
@@ -124,6 +128,39 @@ def user_message(exc: BaseException) -> tuple[str, str]:
     return _tr("Error inesperado"), _tr(
         "Ha ocurrido un error inesperado. Los detalles se han guardado en el registro de la aplicación."
     )
+
+
+def _signing_message(exc: BaseException, params: dict) -> tuple[str, str] | None:
+    from ..core import signatures
+
+    if isinstance(exc, certstore.CertificatePasswordError):
+        kind = params.get("kind", "file")
+        if kind == "pin":
+            return _tr("PIN incorrecto"), _tr(
+                "El PIN de la tarjeta no es correcto. Cuidado: tras varios intentos fallidos, la tarjeta se bloquea.")
+        if kind == "nss":
+            return _tr("Contraseña incorrecta"), _tr("La contraseña principal del navegador no es correcta.")
+        return _tr("Contraseña incorrecta"), _tr("La contraseña del certificado no es correcta.")
+    if isinstance(exc, certstore.CertificateAccessError):
+        reason = params.get("reason", "")
+        if reason == "cancelled":
+            return _tr("Firma cancelada"), _tr("Se ha cancelado la petición del PIN: el documento no se ha firmado.")
+        if reason == "pin_locked":
+            return _tr("Tarjeta bloqueada"), _tr(
+                "El PIN está bloqueado por demasiados intentos fallidos. Para desbloquearlo, acude a quien te dio "
+                "la tarjeta (el DNIe, en un punto de actualización de una comisaría).")
+        if reason == "no_card":
+            return _tr("No se encuentra la tarjeta"), _tr(
+                "Conecta el lector, mete la tarjeta y vuelve a intentarlo.")
+        return _tr("No se puede usar el certificado"), _tr(
+            "No se ha podido usar la clave privada del certificado. Comprueba que sigue instalado.")
+    if isinstance(exc, certstore.CertificateError):
+        return _tr("Certificado no válido"), _tr(
+            "El certificado está caducado, aún no es válido o no tiene su clave privada.")
+    if isinstance(exc, signatures.TimestampError):
+        return _tr("Sin sello de tiempo"), _tr(
+            "No se ha podido conectar con el servidor del sello de tiempo. Comprueba tu conexión o firma sin él.")
+    return None
 
 
 def show_error(parent: QWidget | None, exc: BaseException, context: str = "") -> None:

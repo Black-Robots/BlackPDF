@@ -176,6 +176,29 @@ class Settings:
     def set_window_geometry(self, value: QByteArray) -> None:
         self._qs.setValue("window/geometry", value)
 
+    # ---------- certificados para firmar ----------
+    def signing_files(self) -> dict[str, str]:
+        """Archivos .pfx/.p12 ya usados, con el nombre de su titular (vacío si aún no se sabe)."""
+        items = self._json("signing/files", {})
+        found = {p: n for p, n in items.items() if isinstance(p, str) and isinstance(n, str)} \
+            if isinstance(items, dict) else {}
+        legacy = str(self._qs.value("signing/certificate", "") or "")
+        if legacy and legacy not in found:
+            found[legacy] = ""
+        return found
+
+    def remember_signing_file(self, path: str, holder: str = "") -> None:
+        items = self.signing_files()
+        items[path] = holder or items.get(path, "")
+        self._set_json("signing/files", items)
+
+    def forget_signing_file(self, path: str) -> None:
+        items = self.signing_files()
+        items.pop(path, None)
+        if str(self._qs.value("signing/certificate", "") or "") == path:
+            self._qs.remove("signing/certificate")
+        self._set_json("signing/files", items)
+
     # ---------- recientes ----------
     def recent_files(self) -> list[str]:
         items = self._json("files/recent", [])

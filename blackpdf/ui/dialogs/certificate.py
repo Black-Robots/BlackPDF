@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 import datetime as dt
+import sys
+import threading
 from pathlib import Path
 
 import pymupdf
-from PySide6.QtCore import QT_TRANSLATE_NOOP, QCoreApplication, QRectF, Qt, QTimer, Signal
+from PySide6.QtCore import QT_TRANSLATE_NOOP, QCoreApplication, QRectF, QSize, QStandardPaths, Qt, QTimer, Signal
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDialog,
+    QFileDialog,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -20,10 +23,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ...core import certstore
 from ...core.signatures import (
     DEFAULT_TSA,
     CertificateError,
     CertificatePasswordError,
+    Identity,
     SignatureStatus,
     SignOptions,
     StampText,
@@ -33,7 +38,7 @@ from ...core.signatures import (
 )
 from .. import formatting, icons
 from ..settings import settings
-from ..widgets import Button, PathPicker, SectionLabel, SegmentedControl, label
+from ..widgets import Button, IconButton, SectionLabel, SegmentedControl, label
 from .base import ValidationError
 from .edit import PositionPicker, _PreviewDialog
 from .security import PasswordField
@@ -46,6 +51,34 @@ def _tr(text: str) -> str:
 
 def certificate_filter() -> str:
     return _tr("Certificados digitales (*.p12 *.pfx)")
+
+
+ORIGIN_ICONS = {"windows": "monitor", "firefox": "globe", "chrome": "globe", "thunderbird": "globe",
+                "card": "id-card", "file": "file-key"}
+_SESSION_SECRETS: dict[str, str] = {}
+"""Contraseñas y PIN que quien firma pidió no volver a escribir, solo en memoria hasta cerrar BlackPDF."""
+
+
+def origin_text(identity: Identity) -> str:
+    """Dónde está el certificado, en pocas palabras."""
+    names = {"windows": "Windows", "firefox": "Firefox", "chrome": "Chrome", "thunderbird": "Thunderbird"}
+    if identity.origin == "card":
+        return _tr("Tarjeta «{0}»").format(identity.detail) if identity.detail else _tr("Tarjeta")
+    if identity.origin == "file":
+        return identity.detail
+    name = names.get(identity.origin, identity.origin)
+    if identity.origin != "windows" and identity.detail:
+        return _tr("{0} (perfil {1})").format(name, identity.detail)
+    return name
+
+
+def search_folders() -> list[str]:
+    """Carpetas donde suele acabar un certificado descargado o exportado."""
+    kinds = (QStandardPaths.StandardLocation.DownloadLocation, QStandardPaths.StandardLocation.DocumentsLocation,
+             QStandardPaths.StandardLocation.DesktopLocation)
+    folders = [QStandardPaths.writableLocation(kind) for kind in kinds]
+    home = str(Path.home())
+    return [f for f in dict.fromkeys(folders) if f and Path(f).is_dir() and f != home]
 
 
 REASONS = (
@@ -75,18 +108,39 @@ class CertificateSignDialog(_PreviewDialog):
     def preview_caption(self):
         return self.tr("Vista previa de la página firmada")
 
+    _identities_found = Signal(object)
+
     def build(self):
         self._info = None
+        self._identities: list[Identity] = []
         self.add_source()
         self.begin_columns()
 
-        self.certificate = PathPicker("open", certificate_filter(), self,
-                                      placeholder=self.tr("Archivo .pfx o .p12"))
-        self.certificate.set_path(str(settings().value("signing/certificate", "") or ""))
-        self.add_field(self.tr("Certificado"), self.certificate, self.tr(
-            "Si lo tienes instalado en Windows o en el navegador, expórtalo como archivo .pfx con su clave privada."))
+        picker = QWidget()
+        picker_layout = QHBoxLayout(picker)
+        picker_layout.setContentsMargins(0, 0, 0, 0)
+        picker_layout.setSpacing(6)
+        self.certificate = QComboBox()
+        self.certificate.setIconSize(QSize(16, 16))
+        self.certificate.setMinimumContentsLength(18)
+        self.certificate.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+        picker_layout.addWidget(self.certificate, 1)
+        self.refresh_button = IconButton("refresh-cw", self.tr("Volver a buscar (por ejemplo, tras meter la tarjeta)"), self)
+        self.refresh_button.clicked.connect(self._search_identities)
+        picker_layout.addWidget(self.refresh_button)
+        if sys.platform == "win32":
+            hint = self.tr("Aparecen los certificados instalados en Windows, también los de tu DNIe u otra tarjeta "
+                           "con el lector conectado.")
+        else:
+            hint = self.tr("Aparecen los de Firefox, Chrome y Thunderbird, los de tu DNIe u otra tarjeta con el "
+                           "lector conectado y los archivos .pfx o .p12 de Descargas y Documentos.")
+        self.add_field(self.tr("Certificado"), picker, hint)
         self.cert_password = PasswordField(self.tr("Contraseña del certificado"))
-        self.add_field(self.tr("Contraseña"), self.cert_password)
+        self.password_block = self.add_field(self.tr("Contraseña"), self.cert_password)
+        self.password_caption = self.password_block.findChild(QLabel)
+        self.remember = QCheckBox(self.tr("No volver a pedirla hasta cerrar BlackPDF"))
+        self.remember.setChecked(True)
+        self.form.addWidget(self.remember)
         self.cert_card = QFrame()
         self.cert_card.setProperty("role", "panel")
         card_layout = QHBoxLayout(self.cert_card)
@@ -102,8 +156,9 @@ class CertificateSignDialog(_PreviewDialog):
         self._check_timer.setSingleShot(True)
         self._check_timer.setInterval(350)
         self._check_timer.timeout.connect(self._check_certificate)
-        self.certificate.changed.connect(lambda _: self._check_timer.start())
+        self.certificate.currentIndexChanged.connect(self._identity_changed)
         self.cert_password.edit.textChanged.connect(lambda _: self._check_timer.start())
+        self._identities_found.connect(self._show_identities)
 
         self.visible = SegmentedControl([("visible", self.tr("Sello visible")), ("invisible", self.tr("Invisible"))])
         self.add_field(self.tr("Apariencia"), self.visible)
@@ -158,16 +213,127 @@ class CertificateSignDialog(_PreviewDialog):
         self.finish_build()
         if self.context is not None:
             self.page_choice.addItem(self.tr("Página actual"), -2)
-        self._check_timer.start()
+        self._search_identities()
         self.update_preview()
 
     # ---------- certificado ----------
+    def _search_identities(self) -> None:
+        """Busca los certificados del equipo en otro hilo: leer los almacenes puede tardar un poco."""
+        self.certificate.blockSignals(True)
+        self.certificate.clear()
+        self.certificate.addItem(icons.icon("search", icons.ROLE_MUTED), self.tr("Buscando tus certificados..."))
+        self.certificate.setEnabled(False)
+        self.certificate.blockSignals(False)
+        self.refresh_button.setEnabled(False)
+        files = list(settings().signing_files())
+        folders = search_folders()
+
+        def work():
+            try:
+                found = certstore.list_identities(files, folders)
+            except Exception:
+                found = []
+            try:
+                self._identities_found.emit(found)
+            except RuntimeError:
+                pass  # El diálogo ya se ha cerrado.
+
+        threading.Thread(target=work, name="BlackPDF-certificados", daemon=True).start()
+
+    def _show_identities(self, found: list[Identity]) -> None:
+        previous = self.identity()
+        wanted = previous.key if previous is not None else str(settings().value("signing/identity", "") or "")
+        self._identities = list(found)
+        self._fill_combo(wanted)
+
+    def _fill_combo(self, wanted: str = "") -> None:
+        names = settings().signing_files()
+        self.certificate.blockSignals(True)
+        self.certificate.clear()
+        for identity in self._identities:
+            info = identity.info()
+            if info is not None:
+                text = f"{info.name} · {origin_text(identity)}"
+            else:
+                holder = names.get(identity.location, "")
+                text = f"{holder} · {identity.detail}" if holder else identity.detail
+            self.certificate.addItem(icons.icon(ORIGIN_ICONS.get(identity.origin, "file-key")), text, identity)
+        if not self._identities:
+            self.certificate.addItem(icons.icon("shield-alert", icons.ROLE_MUTED),
+                                     self.tr("No hay certificados en este equipo"))
+        self.certificate.insertSeparator(self.certificate.count())
+        self.certificate.addItem(icons.icon("folder-search"), self.tr("Buscar un archivo .pfx o .p12..."), "browse")
+        index = next((i for i, identity in enumerate(self._identities) if identity.key == wanted), 0)
+        self.certificate.setCurrentIndex(index)
+        self.certificate.setEnabled(True)
+        self.certificate.blockSignals(False)
+        self.refresh_button.setEnabled(True)
+        self._identity_changed()
+
+    def identity(self) -> Identity | None:
+        data = self.certificate.currentData()
+        return data if isinstance(data, Identity) else None
+
+    def use_file(self, path: str) -> None:
+        """Añade un archivo .pfx/.p12 a la lista (y lo recuerda) y lo elige."""
+        resolved = str(Path(path).resolve())
+        identity = next((i for i in self._identities if i.source == "file" and i.location == resolved), None)
+        if identity is None:
+            identity = Identity("file", resolved, "file", Path(resolved).name, secret="file")
+            self._identities.append(identity)
+        settings().remember_signing_file(resolved)
+        self._fill_combo(identity.key)
+
+    def _browse(self) -> None:
+        path, _ = QFileDialog.getOpenFileName(self, self.tr("Elige tu certificado"), settings().last_directory,
+                                              certificate_filter())
+        if path:
+            self.use_file(path)
+        else:
+            previous = str(settings().value("signing/identity", "") or "")
+            self._fill_combo(previous)
+
+    def _identity_changed(self, *_args) -> None:
+        if self.certificate.currentData() == "browse":
+            QTimer.singleShot(0, self._browse)
+            return
+        identity = self.identity()
+        secret = identity.secret if identity is not None else ""
+        captions = {
+            "file": (self.tr("Contraseña"), self.tr("Contraseña del certificado")),
+            "nss": (self.tr("Contraseña principal"), self.tr("La que protege los certificados del navegador")),
+            "pin": (self.tr("PIN"), self.tr("PIN de la tarjeta")),
+        }
+        self.password_block.setVisible(bool(secret))
+        self.remember.setVisible(bool(secret))
+        if secret:
+            caption, placeholder = captions[secret]
+            self.password_caption.setText(caption)
+            self.cert_password.edit.setPlaceholderText(placeholder)
+        self.cert_password.edit.blockSignals(True)
+        self.cert_password.edit.setText(_SESSION_SECRETS.get(identity.key, "") if identity is not None else "")
+        self.cert_password.edit.blockSignals(False)
+        self._check_certificate()
+
     def _check_certificate(self) -> None:
-        path = self.certificate.path()
-        password = self.cert_password.text()
+        identity = self.identity()
         self._info = None
-        if not path or not Path(path).is_file():
-            self.cert_card.setVisible(False)
+        if identity is None:
+            if self.certificate.isEnabled() and not self._identities:
+                self._show_card("shield-alert", icons.ROLE_MUTED, self.tr(
+                    "No hemos encontrado certificados en este equipo. Si tienes uno en un archivo .pfx o .p12, "
+                    "elige «Buscar un archivo .pfx o .p12»."))
+            else:
+                self.cert_card.setVisible(False)
+            self.refresh()
+            return
+        if identity.source != "file":
+            self._info = identity.info()
+            self._describe(self._info, self._place(identity))
+            return
+        password = self.cert_password.text()
+        if not Path(identity.location).is_file():
+            self._show_card("shield-x", icons.ROLE_DANGER, self.tr("El archivo ya no está en su sitio."))
             self.refresh()
             return
         if not password:
@@ -175,7 +341,7 @@ class CertificateSignDialog(_PreviewDialog):
             self.refresh()
             return
         try:
-            info = load_certificate(path, password)
+            info = load_certificate(identity.location, password)
         except CertificatePasswordError:
             self._show_card("shield-x", icons.ROLE_DANGER, self.tr("La contraseña no es correcta o el archivo no es un certificado."))
             self.refresh()
@@ -189,14 +355,28 @@ class CertificateSignDialog(_PreviewDialog):
             self.refresh()
             return
         self._info = info
+        self._describe(info, self._place(identity))
+
+    def _place(self, identity: Identity) -> str:
+        if identity.source == "windows":
+            if identity.origin == "card":
+                return self.tr("En tu tarjeta, a través de Windows: te pedirá el PIN al firmar.")
+            return self.tr("Instalado en Windows.")
+        if identity.source == "nss":
+            return self.tr("Guardado en {0}.").format(origin_text(identity))
+        if identity.source == "token":
+            return self.tr("En la tarjeta «{0}».").format(identity.detail or identity.token)
+        return self.tr("Archivo «{0}» en {1}.").format(Path(identity.location).name, Path(identity.location).parent)
+
+    def _describe(self, info, place: str) -> None:
         valid_to = formatting.date(info.valid_to.astimezone())
         details = f"<b>{info.name}</b><br>" + self.tr("Emitido por {0}").format(info.issuer)
         if info.expired:
             details += "<br>" + self.tr("Caducó el {0}: no se puede usar para firmar.").format(valid_to)
-            self._show_card("shield-alert", icons.ROLE_DANGER, details)
+            self._show_card("shield-alert", icons.ROLE_DANGER, details + "<br>" + place)
         else:
             details += "<br>" + self.tr("Válido hasta el {0}").format(valid_to)
-            self._show_card("shield-check", icons.ROLE_SUCCESS, details)
+            self._show_card("shield-check", icons.ROLE_SUCCESS, details + "<br>" + place)
         self.update_preview()
         self.refresh()
 
@@ -254,17 +434,25 @@ class CertificateSignDialog(_PreviewDialog):
 
     # ---------- ejecución ----------
     def is_ready(self):
-        return self.source.is_ready() and self._info is not None and not self._info.expired
+        identity = self.identity()
+        if not self.source.is_ready() or identity is None or self._info is None or self._info.expired:
+            return False
+        return identity.source == "file" or not identity.secret or bool(self.cert_password.text())
 
     def job(self):
         source = self.require_source()
-        if self._info is None:
-            raise ValidationError(self.tr("Elige tu certificado y escribe su contraseña."))
+        identity = self.identity()
+        if identity is None or self._info is None:
+            raise ValidationError(self.tr("Elige tu certificado."))
+        if identity.secret and not self.cert_password.text():
+            raise ValidationError(self.tr("Escribe la contraseña o el PIN."))
         output = self.require_output(self.output, [self.source.original_path()])
         reason = self.reason.currentText().strip()
         location = self.location.text().strip()
         tsa = self.tsa.text().strip() if self.timestamp.isChecked() else ""
-        settings().set_value("signing/certificate", self.certificate.path())
+        settings().set_value("signing/identity", identity.key)
+        if identity.source == "file":
+            settings().remember_signing_file(identity.location, self._info.name)
         settings().set_value("signing/reason", reason)
         settings().set_value("signing/location", location)
         if tsa:
@@ -279,9 +467,22 @@ class CertificateSignDialog(_PreviewDialog):
             timestamp_url=tsa,
             text=stamp_text(),
         )
+        self._signing = (identity, self.cert_password.text())
         return "blackpdf.core.signatures:sign_pdf", (
-            source, output, self.certificate.path(), self.cert_password.text(), options
+            source, output, identity, self.cert_password.text(), options
         ), self.common_kwargs()
+
+    def _on_success(self, result) -> None:
+        identity, secret = getattr(self, "_signing", (None, ""))
+        if identity is not None and secret and self.remember.isChecked():
+            _SESSION_SECRETS[identity.key] = secret
+        super()._on_success(result)
+
+    def _on_failed(self, exc) -> None:
+        identity, _secret = getattr(self, "_signing", (None, ""))
+        if identity is not None and isinstance(exc, CertificatePasswordError):
+            _SESSION_SECRETS.pop(identity.key, None)
+        super()._on_failed(exc)
 
     def describe_result(self, result):
         return self.tr("Documento firmado"), self.tr(
