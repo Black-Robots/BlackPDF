@@ -200,11 +200,15 @@ PROVIDERS = {
 @pytest.mark.parametrize("provider", sorted(PROVIDERS))
 def test_windows_store_signs(tmp_path, provider):
     subject = f"PÉREZ RUIZ ANA - BlackPDF {provider}"
-    script = (f"$c = New-SelfSignedCertificate -Subject 'CN={subject}' -CertStoreLocation Cert:\\CurrentUser\\My "
+    script = (f"$ErrorActionPreference = 'Stop'; "
+              f"$c = New-SelfSignedCertificate -Subject 'CN={subject}' -CertStoreLocation Cert:\\CurrentUser\\My "
               f"-KeyUsage DigitalSignature,NonRepudiation -KeyExportPolicy NonExportable {PROVIDERS[provider]}; "
-              "$c.Thumbprint")
-    thumb = subprocess.run(["powershell", "-NoProfile", "-Command", script], check=True, capture_output=True,
-                           text=True, encoding="utf-8").stdout.strip().splitlines()[-1]
+              "Write-Output $c.Thumbprint")
+    made = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", script], capture_output=True,
+                          text=True, encoding="utf-8", errors="replace")
+    lines = made.stdout.strip().splitlines()
+    assert made.returncode == 0 and lines, f"PowerShell no ha creado el certificado: {made.stdout} {made.stderr}"
+    thumb = lines[-1].strip()
     try:
         found = [i for i in certstore.list_identities() if i.source == "windows" and i.location == thumb.upper()]
         assert len(found) == 1 and found[0].info().name == subject and found[0].secret == ""
@@ -212,3 +216,22 @@ def test_windows_store_signs(tmp_path, provider):
     finally:
         subprocess.run(["powershell", "-NoProfile", "-Command",
                         f"Remove-Item -Path Cert:\\CurrentUser\\My\\{thumb} -DeleteKey"], capture_output=True)
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Firefox en Windows")
+def test_firefox_store_on_windows(tmp_path):
+    """El almacén de Firefox en Windows se abre con su propia biblioteca (softokn3.dll)."""
+    from blackpdf.core import pkcs11
+
+    module = certstore.softokn_path()
+    if module is None:
+        pytest.skip("Firefox no está instalado")
+    profile = tmp_path / "AppData" / "Roaming" / "Mozilla" / "Firefox" / "Profiles" / "abcd.default-release"
+    profile.mkdir(parents=True)
+    # Sin «readOnly», NSS crea un almacén vacío, como el de un perfil nuevo.
+    parameters = pkcs11.nss_parameters(str(profile)).replace(" flags=readOnly,noModDB", " flags=noModDB")
+    with pkcs11.Module(module, parameters) as created:
+        assert created.slots()
+    assert (profile / "cert9.db").is_file()
+    assert certstore.nss_databases(str(tmp_path)) == [(str(profile), "firefox", "default-release")]
+    assert certstore._pkcs11_identities(module, "nss", "firefox", "", nss_folder=str(profile)) == []

@@ -479,8 +479,8 @@
         </message>
         <message>
             <location filename="../blackpdf/ui/dialogs/certificate.py" line="132" />
-            <source>Aparecen los certificados instalados en Windows, también los de tu DNIe u otra tarjeta con el lector conectado.</source>
-            <translation>Aparecem os certificados instalados no Windows, também os do seu cartão ou token com a leitora conectada.</translation>
+            <source>Aparecen los certificados instalados en Windows y en Firefox, también los de tu DNIe u otra tarjeta con el lector conectado, y los archivos .pfx o .p12 de Descargas y Documentos.</source>
+            <translation>Aparecem os certificados instalados no Windows e no Firefox, também os do seu cartão ou token com a leitora conectada, e os arquivos .pfx ou .p12 de Downloads e Documentos.</translation>
         </message>
         <message>
             <location filename="../blackpdf/ui/dialogs/certificate.py" line="135" />

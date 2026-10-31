@@ -182,7 +182,9 @@ def _find(thumb: str):
         context = crypt32.CertEnumCertificatesInStore(store, None)
         while context:
             if thumbprint(_der(context)) == thumb.upper():
-                return crypt32.CertDuplicateCertificateContext(context)
+                found = crypt32.CertDuplicateCertificateContext(context)
+                crypt32.CertFreeCertificateContext(context)  # La enumeración se corta aquí: se suelta a mano.
+                return found
             context = crypt32.CertEnumCertificatesInStore(store, context)
     finally:
         crypt32.CertCloseStore(store, 0)

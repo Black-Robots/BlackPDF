@@ -129,8 +129,8 @@ class CertificateSignDialog(_PreviewDialog):
         self.refresh_button.clicked.connect(self._search_identities)
         picker_layout.addWidget(self.refresh_button)
         if sys.platform == "win32":
-            hint = self.tr("Aparecen los certificados instalados en Windows, también los de tu DNIe u otra tarjeta "
-                           "con el lector conectado.")
+            hint = self.tr("Aparecen los certificados instalados en Windows y en Firefox, también los de tu DNIe u "
+                           "otra tarjeta con el lector conectado, y los archivos .pfx o .p12 de Descargas y Documentos.")
         else:
             hint = self.tr("Aparecen los de Firefox, Chrome y Thunderbird, los de tu DNIe u otra tarjeta con el "
                            "lector conectado y los archivos .pfx o .p12 de Descargas y Documentos.")

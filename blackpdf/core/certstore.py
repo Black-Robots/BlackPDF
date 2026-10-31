@@ -3,7 +3,7 @@
 Como en Acrobat, quien firma elige su certificado de una lista, sin buscar archivos:
 
 - En Windows, los del almacén «Personal» (FNMT, DNIe con el lector conectado...): Windows
-  firma y pide él el PIN si hace falta.
+  firma y pide él el PIN si hace falta. Y los de Firefox y Thunderbird, que tienen su almacén.
 - En Linux, los de Firefox, Chrome y Thunderbird (sus almacenes NSS) y los de las tarjetas
   con lector (OpenSC, módulo del DNIe).
 - En los dos, los archivos .pfx/.p12 ya usados o que estén en las carpetas habituales.
@@ -186,6 +186,7 @@ def list_identities(files: Iterable[str] = (), folders: Iterable[str] = (),
     steps: list[Callable[[], list[Identity]]] = []
     if sys.platform == "win32":
         steps.append(_windows_identities)
+        steps.append(lambda: _nss_identities(home))
     elif sys.platform.startswith("linux"):
         steps.append(lambda: _nss_identities(home))
         steps.append(_card_identities)
@@ -254,6 +255,15 @@ def nss_databases(home: str | None = None) -> list[tuple[str, str, str]]:
     """Almacenes de certificados de los navegadores: (carpeta, origen, perfil)."""
     base = Path(home or Path.home())
     found: list[tuple[str, str, str]] = []
+    if sys.platform == "win32":
+        # Chrome y Edge usan el almacén de Windows; Firefox y Thunderbird, el suyo.
+        roaming = Path(os.environ.get("APPDATA") or base / "AppData" / "Roaming") if home is None \
+            else base / "AppData" / "Roaming"
+        for pattern, origin in (("Mozilla/Firefox/Profiles/*", "firefox"), ("Thunderbird/Profiles/*", "thunderbird")):
+            for folder in sorted(glob.glob(str(roaming / pattern))):
+                if Path(folder, "cert9.db").is_file():
+                    found.append((folder, origin, Path(folder).name.split(".", 1)[-1]))
+        return found
     for folder, origin in (
         (base / ".pki" / "nssdb", "chrome"),
         (base / "snap" / "chromium" / "current" / ".pki" / "nssdb", "chrome"),
@@ -274,7 +284,15 @@ def nss_databases(home: str | None = None) -> list[tuple[str, str, str]]:
 
 
 def softokn_path() -> str | None:
-    """El módulo de NSS con el que se abren los almacenes de los navegadores."""
+    """El módulo de NSS con el que se abren los almacenes de los navegadores (en Windows, el de Firefox)."""
+    if sys.platform == "win32":
+        folders = [os.environ.get(name, "") for name in ("ProgramW6432", "ProgramFiles", "LOCALAPPDATA")]
+        for folder in filter(None, folders):
+            for app in ("Mozilla Firefox", "Mozilla Thunderbird"):
+                path = Path(folder, app, "softokn3.dll")
+                if path.is_file():
+                    return str(path)
+        return None
     for path in SOFTOKN_PATHS:
         if Path(path).is_file():
             return path
