@@ -12,7 +12,17 @@ Available in English, Spanish, Portuguese and French.
 The Windows installer is not code-signed yet: if SmartScreen shows a warning, click **More info** and **Run anyway**.
 `SHA256SUMS.txt` contains the checksums of every file.
 
-### What's new in 1.3.0
+### What's new in 1.4.0
+
+- **Sign with the certificates you already have, without looking for files**: like in Acrobat, BlackPDF finds
+  them for you. On Windows, the ones installed in the system (also your ID card with the reader connected)
+  and in Firefox; on Linux, the ones in Firefox, Chrome and Thunderbird and on cards with a reader; and the .pfx or .p12 files
+  you have already used or keep in Downloads or Documents. The last one you used is already chosen, and the
+  password or PIN is only asked for when needed.
+- **Extract pages into separate PDFs**: one PDF per page (a 12-page document gives 12 PDFs) or one per range
+  ("1-3, 5-6" gives two PDFs).
+
+### New in 1.3.0
 
 - **Measure in the 3D viewer, like in a CAD program**: move the cursor over the part and it recognises what is
   underneath: a corner, an edge, a circle or an arc, or a face. Click once to see its length, diameter, radius or
@@ -53,7 +63,17 @@ The Windows installer is not code-signed yet: if SmartScreen shows a warning, cl
 Disponible en español, inglés, portugués y francés. El instalador de Windows aún no está firmado: si SmartScreen muestra un aviso,
 pulsa **Más información** y **Ejecutar de todas formas**.
 
-**Novedades de la 1.3.0**
+**Novedades de la 1.4.0**
+
+- **Firma con los certificados que ya tienes, sin buscar archivos**: como en Acrobat, BlackPDF los encuentra
+  solo. En Windows, los instalados en el sistema (también tu DNIe con el lector conectado) y en Firefox; en
+  Linux, los de Firefox, Chrome y Thunderbird y los de las tarjetas con lector; y los archivos .pfx o .p12 que ya hayas usado
+  o tengas en Descargas o Documentos. El último que usaste ya está elegido, y la contraseña o el PIN solo se
+  piden cuando hacen falta.
+- **Extraer páginas en PDF separados**: un PDF por página (un documento de 12 páginas da 12 PDF) o uno por
+  rango («1-3, 5-6» da dos PDF).
+
+**Llegó en la 1.3.0**
 
 - **Medir en el visor 3D como en un programa de CAD**: al pasar el cursor por la pieza reconoce lo que hay
   debajo: una esquina, una arista, una circunferencia o un arco, o una cara. Con un clic ves su longitud,

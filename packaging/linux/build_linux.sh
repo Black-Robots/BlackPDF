@@ -66,6 +66,7 @@ install -Dm644 packaging/linux/org.blackrobots.BlackPDF.metainfo.xml \
 install_icons "$PKG/usr/share"
 install -Dm644 LICENSE "$PKG/usr/share/doc/blackpdf/copyright"
 SIZE="$(du -sk "$PKG" | cut -f1)"
+# libnss3 (recomendado): firmar con los certificados de Firefox y Chrome; opensc: con tarjetas como el DNIe.
 cat > "$PKG/DEBIAN/control" <<CTRL
 Package: blackpdf
 Version: $VERSION
@@ -74,6 +75,8 @@ Priority: optional
 Architecture: amd64
 Installed-Size: $SIZE
 Depends: libc6 (>= 2.35), libgl1, libegl1, libfontconfig1, libxkbcommon0, libxinerama1
+Recommends: libnss3
+Suggests: opensc
 Maintainer: The Black Robots Foundation <hello@blackrobots.org>
 Homepage: https://blackrobots.org/blackpdf
 Description: Visor y editor de PDF libre y sin conexión

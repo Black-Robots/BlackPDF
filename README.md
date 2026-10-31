@@ -33,7 +33,7 @@ Available for **Windows 10/11** and **Linux**, in English, Spanish, Portuguese a
 - Multiple selection with Ctrl and Shift. Undo and redo (up to 30 steps).
 
 **Tools**
-- Merge, split (by ranges, every N pages or one per file), alternate the pages of two PDFs, extract, rotate.
+- Merge, split (by ranges, every N pages or one per file), alternate the pages of two PDFs, extract (into one PDF, one PDF per page or one per range), rotate.
 - Compress (three levels), PDF to image (PNG/JPG) and image to PDF.
 - Text or image watermarks and page numbers, with a live preview.
 - Protect with AES-256 and unlock, crop margins (automatic or manual), change the page size.
@@ -58,7 +58,8 @@ Available for **Windows 10/11** and **Linux**, in English, Spanish, Portuguese a
 - Everything is saved as standard PDF annotations, visible in any reader.
 
 **Digital signature with a certificate**
-- PAdES signatures with a personal, national eID or company certificate (.pfx / .p12 file): visible stamp with name, date, reason and location, optionally with your saved handwritten signature.
+- PAdES signatures with a personal, national eID or company certificate: visible stamp with name, date, reason and location, optionally with your saved handwritten signature.
+- Your certificates are found for you, like in Acrobat: the ones installed in Windows (also on an ID card with the reader connected), in Firefox and Thunderbird, in Chrome on Linux, on smart cards (OpenSC) and the .pfx / .p12 files you have used or keep in Downloads or Documents. The private key never leaves its store.
 - The signature is added as an incremental revision, without rewriting the document, so readers show that it has not been modified after signing.
 - Signed PDFs are saved incrementally too: comments added later keep the signatures valid.
 - Optional timestamp from a TSA server, and verification of the signatures in any PDF (who signed, when and whether the document is still intact).
