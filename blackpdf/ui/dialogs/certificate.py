@@ -227,6 +227,8 @@ class CertificateSignDialog(_PreviewDialog):
         self.refresh_button.setEnabled(False)
         files = list(settings().signing_files())
         folders = search_folders()
+        self._search_round = getattr(self, "_search_round", 0) + 1
+        search_round = self._search_round
 
         def work():
             try:
@@ -234,13 +236,16 @@ class CertificateSignDialog(_PreviewDialog):
             except Exception:
                 found = []
             try:
-                self._identities_found.emit(found)
+                self._identities_found.emit((search_round, found))
             except RuntimeError:
                 pass  # El diálogo ya se ha cerrado.
 
         threading.Thread(target=work, name="BlackPDF-certificados", daemon=True).start()
 
-    def _show_identities(self, found: list[Identity]) -> None:
+    def _show_identities(self, result: tuple[int, list[Identity]]) -> None:
+        search_round, found = result
+        if search_round != self._search_round:
+            return  # Una búsqueda anterior que ha terminado tarde.
         previous = self.identity()
         wanted = previous.key if previous is not None else str(settings().value("signing/identity", "") or "")
         self._identities = list(found)
@@ -466,11 +471,22 @@ class CertificateSignDialog(_PreviewDialog):
             handwritten=self._handwritten(),
             timestamp_url=tsa,
             text=stamp_text(),
+            window=self._window_handle(),
         )
         self._signing = (identity, self.cert_password.text())
         return "blackpdf.core.signatures:sign_pdf", (
             source, output, identity, self.cert_password.text(), options
         ), self.common_kwargs()
+
+    def _window_handle(self) -> int:
+        """En Windows, la ventana sobre la que el sistema pedirá el PIN de la tarjeta."""
+        if sys.platform != "win32":
+            return 0
+        import ctypes
+
+        # La firma va en otro proceso: se le deja poner su ventana del PIN por delante.
+        ctypes.windll.user32.AllowSetForegroundWindow(-1)
+        return int(self.window().winId())
 
     def _on_success(self, result) -> None:
         identity, secret = getattr(self, "_signing", (None, ""))
@@ -482,6 +498,9 @@ class CertificateSignDialog(_PreviewDialog):
         identity, _secret = getattr(self, "_signing", (None, ""))
         if identity is not None and isinstance(exc, CertificatePasswordError):
             _SESSION_SECRETS.pop(identity.key, None)
+            # Que no se vuelva a enviar sin querer: en una tarjeta, cada intento fallido cuenta.
+            self.cert_password.edit.clear()
+            self.cert_password.edit.setFocus()
         super()._on_failed(exc)
 
     def describe_result(self, result):

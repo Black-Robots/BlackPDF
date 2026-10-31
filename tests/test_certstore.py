@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import os
 import shutil
 import subprocess
 import sys
@@ -204,8 +205,11 @@ def test_windows_store_signs(tmp_path, provider):
               f"$c = New-SelfSignedCertificate -Subject 'CN={subject}' -CertStoreLocation Cert:\\CurrentUser\\My "
               f"-KeyUsage DigitalSignature,NonRepudiation -KeyExportPolicy NonExportable {PROVIDERS[provider]}; "
               "Write-Output $c.Thumbprint")
+    # Windows PowerShell con sus propios módulos: si se lanza desde PowerShell 7 (como en CI), hereda una
+    # ruta de módulos que no sirve y no encuentra la unidad «Cert:».
+    env = {key: value for key, value in os.environ.items() if key.upper() != "PSMODULEPATH"}
     made = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", script], capture_output=True,
-                          text=True, encoding="utf-8", errors="replace")
+                          text=True, encoding="utf-8", errors="replace", env=env)
     lines = made.stdout.strip().splitlines()
     assert made.returncode == 0 and lines, f"PowerShell no ha creado el certificado: {made.stdout} {made.stderr}"
     thumb = lines[-1].strip()
@@ -215,7 +219,7 @@ def test_windows_store_signs(tmp_path, provider):
         _sign_and_check(tmp_path, found[0])
     finally:
         subprocess.run(["powershell", "-NoProfile", "-Command",
-                        f"Remove-Item -Path Cert:\\CurrentUser\\My\\{thumb} -DeleteKey"], capture_output=True)
+                        f"Remove-Item -Path Cert:\\CurrentUser\\My\\{thumb} -DeleteKey"], capture_output=True, env=env)
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Firefox en Windows")
@@ -235,3 +239,23 @@ def test_firefox_store_on_windows(tmp_path):
     assert (profile / "cert9.db").is_file()
     assert certstore.nss_databases(str(tmp_path)) == [(str(profile), "firefox", "default-release")]
     assert certstore._pkcs11_identities(module, "nss", "firefox", "", nss_folder=str(profile)) == []
+
+
+def test_errors_from_cards_and_windows_are_clear():
+    """Cada fallo de la tarjeta o de Windows llega como lo que es: nunca se confunde con un PIN incorrecto."""
+    from blackpdf.core import pkcs11, wincert
+
+    card = certstore.Identity("token", "/x/opensc-pkcs11.so", "card", "DNI", b"", "01", "DNI", "pin")
+    kinds = {code: certstore._pkcs11_error(pkcs11.Pkcs11Error("C_Sign", code), card)
+             for code in (0xA0, 0xA1, 0xA3, 0xA4, 0x50, 0xE0, 0xE1, 0x30, 0x5)}
+    assert all(isinstance(kinds[c], certstore.CertificatePasswordError) for c in (0xA0, 0xA1))
+    assert kinds[0xA0].params["kind"] == "pin"
+    assert [kinds[c].params["reason"] for c in (0xA3, 0xA4, 0x50, 0xE0, 0xE1, 0x30, 0x5)] == \
+        ["pin_locked", "pin_locked", "cancelled", "no_card", "no_card", "no_card", "unavailable"]
+    windows = {code: certstore._windows_error(wincert.WindowsCertError("NCryptSignHash", code))
+               for code in (0x8010006B, 0x80090033, 0x80090029, 0x8010006C, 0x80090036, 0x8010000C)}
+    assert isinstance(windows[0x8010006B], certstore.CertificatePasswordError)
+    assert isinstance(windows[0x80090033], certstore.CertificatePasswordError)
+    assert windows[0x80090029].params["reason"] == "unavailable", "NTE_NOT_SUPPORTED no es un PIN incorrecto"
+    assert [windows[c].params["reason"] for c in (0x8010006C, 0x80090036, 0x8010000C)] == \
+        ["pin_locked", "cancelled", "no_card"]

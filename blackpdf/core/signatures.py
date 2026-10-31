@@ -89,6 +89,8 @@ class SignOptions:
     field_name: str = ""
     text: StampText = field(default_factory=StampText)
     """Textos del sello visible."""
+    window: int = 0
+    """Ventana (identificador del sistema) sobre la que Windows muestra lo que pida al firmar, como el PIN."""
 
 
 def stamp_rect(page: pymupdf.Page, position: str, size: tuple[float, float] = STAMP_SIZE) -> pymupdf.Rect:
@@ -216,9 +218,10 @@ def sign_pdf(
     ``certificate`` es un archivo .pfx/.p12 (ruta o bytes) o un certificado del equipo
     (``Identity``); ``certificate_password``, su contraseña o el PIN, si hacen falta.
     """
+    options = options or SignOptions()
     report(progress, 0, 4)
-    with open_signer(certificate, certificate_password) as (signer, info):
-        result = _sign_with(source, signer, info, options or SignOptions(), password, progress)
+    with open_signer(certificate, certificate_password, options.window) as (signer, info):
+        result = _sign_with(source, signer, info, options, password, progress)
     report(progress, 3, 4)
     try:
         path = atomic_write(output, lambda tmp: Path(tmp).write_bytes(result))

@@ -16,6 +16,7 @@ from typing import NamedTuple
 MY, CA, ROOT = "MY", "CA", "ROOT"
 CERT_KEY_PROV_INFO_PROP_ID = 2
 CRYPT_ACQUIRE_PREFER_NCRYPT_KEY_FLAG = 0x20000
+CRYPT_ACQUIRE_WINDOW_HANDLE_FLAG = 0x80
 CERT_NCRYPT_KEY_SPEC = 0xFFFFFFFF
 BCRYPT_PAD_PKCS1 = 0x2
 PROV_RSA_AES = 24
@@ -28,12 +29,12 @@ CNG_NAMES = {"sha1": "SHA1", "sha256": "SHA256", "sha384": "SHA384", "sha512": "
 # Códigos que significan algo para quien firma.
 CANCELLED = {0x80090036, 0x8010006E, 0x800704C7}
 """NTE_USER_CANCELLED, SCARD_W_CANCELLED_BY_USER, ERROR_CANCELLED."""
-WRONG_PIN = {0x8010006B, 0x80090029}
-"""SCARD_W_WRONG_CHV, y lo que devuelven algunos proveedores con un PIN mal escrito."""
+WRONG_PIN = {0x8010006B, 0x80090033}
+"""SCARD_W_WRONG_CHV y NTE_INCORRECT_PASSWORD."""
 PIN_LOCKED = {0x8010006C}
 """SCARD_W_CHV_BLOCKED."""
-NO_CARD = {0x8010000C, 0x80100069, 0x8010002E, 0x80100017, 0x80090016}
-"""Sin tarjeta, tarjeta retirada, sin lector, lector no disponible, o la clave ya no está (NTE_BAD_KEYSET)."""
+NO_CARD = {0x8010000C, 0x80100069, 0x8010002E, 0x80100017, 0x80090030, 0x80090035}
+"""Sin tarjeta, tarjeta retirada, sin lector, lector no disponible, dispositivo no listo o no encontrado."""
 
 
 class WindowsCertError(Exception):
@@ -191,8 +192,11 @@ def _find(thumb: str):
     return None
 
 
-def sign_digest(thumb: str, digest: bytes, algorithm: str, key_type: str) -> bytes:
-    """Firma la huella con la clave del certificado. RSA: PKCS#1 v1.5; EC: r||s (P1363)."""
+def sign_digest(thumb: str, digest: bytes, algorithm: str, key_type: str, window: int = 0) -> bytes:
+    """Firma la huella con la clave del certificado. RSA: PKCS#1 v1.5; EC: r||s (P1363).
+
+    ``window``: la ventana sobre la que Windows muestra lo que tenga que pedir (el PIN de una tarjeta).
+    """
     crypt32 = _lib("crypt32")
     context = _find(thumb)
     if context is None:
@@ -201,9 +205,12 @@ def sign_digest(thumb: str, digest: bytes, algorithm: str, key_type: str) -> byt
         handle = ctypes.c_size_t(0)
         key_spec = wintypes.DWORD(0)
         must_free = wintypes.BOOL(False)
-        if not crypt32.CryptAcquireCertificatePrivateKey(context, CRYPT_ACQUIRE_PREFER_NCRYPT_KEY_FLAG, None,
-                                                         ctypes.byref(handle), ctypes.byref(key_spec),
-                                                         ctypes.byref(must_free)):
+        flags, parent = CRYPT_ACQUIRE_PREFER_NCRYPT_KEY_FLAG, None
+        if window:
+            flags |= CRYPT_ACQUIRE_WINDOW_HANDLE_FLAG
+            parent = ctypes.byref(ctypes.c_void_p(window))
+        if not crypt32.CryptAcquireCertificatePrivateKey(context, flags, parent, ctypes.byref(handle),
+                                                         ctypes.byref(key_spec), ctypes.byref(must_free)):
             raise _fail("CryptAcquireCertificatePrivateKey")
         try:
             if key_spec.value == CERT_NCRYPT_KEY_SPEC:

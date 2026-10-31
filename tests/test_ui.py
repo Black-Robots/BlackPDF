@@ -711,6 +711,17 @@ def test_certificate_dialog_uses_browser_certificates(qapp, opened, tmp_path, mo
                                             if identity.origin == "thunderbird"))
     assert dialog.password_block.isVisibleTo(dialog) and dialog.password_caption.text() == "Contraseña principal"
     assert not dialog.is_ready()
+    from blackpdf.ui.dialogs import base
+
+    shown = []
+    monkeypatch.setattr(base, "show_error", lambda parent, exc: shown.append(exc))
+    dialog.cert_password.edit.setText("mala")
+    dialog.output.picker.set_path(str(tmp_path / "no.pdf"))
+    dialog.run()
+    assert wait_until(qapp, lambda: bool(shown), 90)
+    assert type(shown[0]).__name__ == "CertificatePasswordError" and shown[0].params["kind"] == "nss"
+    assert dialog.cert_password.text() == "" and not dialog.is_ready(), "no se reenvía una contraseña que falló"
+    assert not (tmp_path / "no.pdf").exists()
     dialog.cert_password.edit.setText("principal")
     assert dialog.is_ready()
     dialog.close()

@@ -20,6 +20,7 @@ import hashlib
 import logging
 import os
 import sys
+import threading
 from collections.abc import Callable, Iterable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -50,6 +51,8 @@ CARD_MODULES = (
     "/usr/lib/pkcs11/opensc-pkcs11.so", "/usr/lib/libpkcs11-dnie.so", "/usr/lib64/libpkcs11-dnie.so",
 )
 """Módulos de tarjetas: OpenSC (DNIe y la mayoría de tarjetas) y el del DNIe de la Policía."""
+_PKCS11_LOCK = threading.Lock()
+"""Un módulo PKCS#11 solo se puede abrir una vez por proceso: una búsqueda o una firma cada vez."""
 
 
 # ======================================================================
@@ -337,7 +340,7 @@ def _pkcs11_identities(module_path: str, source: str, origin: str, detail: str,
 
     found: list[Identity] = []
     parameters = pkcs11.nss_parameters(nss_folder) if nss_folder else ""
-    with pkcs11.Module(module_path, parameters) as module:
+    with _PKCS11_LOCK, pkcs11.Module(module_path, parameters) as module:
         for slot in module.slots():
             token = module.token(slot)
             label = pkcs11.text(token.label)
@@ -455,10 +458,11 @@ def _ec_der(raw: bytes) -> bytes:
 
 
 @contextmanager
-def open_signer(certificate, password: str = "") -> Iterator[tuple[object, CertificateInfo]]:
+def open_signer(certificate, password: str = "", window: int = 0) -> Iterator[tuple[object, CertificateInfo]]:
     """El firmante de pyHanko para ese certificado (una ruta, sus bytes o una ``Identity``), con su titular.
 
-    Úsalo con ``with``: la tarjeta o el almacén siguen abiertos hasta terminar de firmar.
+    Úsalo con ``with``: la tarjeta o el almacén siguen abiertos hasta terminar de firmar. ``window``
+    es la ventana sobre la que Windows pide el PIN.
     """
     if isinstance(certificate, Identity) and certificate.source == "file":
         certificate = certificate.location
@@ -470,7 +474,7 @@ def open_signer(certificate, password: str = "") -> Iterator[tuple[object, Certi
         raise CertificateError("certificado vacío")
     _check_dates(info)
     if certificate.source == "windows":
-        yield _windows_signer(certificate), info
+        yield _windows_signer(certificate, window), info
         return
     with _pkcs11_signer(certificate, password) as signer:
         yield signer, info
@@ -518,14 +522,14 @@ def _file_signer(certificate, password: str):
     return signer, info
 
 
-def _windows_signer(identity: Identity):
+def _windows_signer(identity: Identity, window: int = 0):
     from . import wincert
 
     key_type = _key_type(identity.certificate)
 
     def sign_digest(digest: bytes, algorithm: str) -> bytes:
         try:
-            raw = wincert.sign_digest(identity.location, digest, algorithm, key_type)
+            raw = wincert.sign_digest(identity.location, digest, algorithm, key_type, window)
         except wincert.WindowsCertError as exc:
             raise _windows_error(exc) from exc
         return _ec_der(raw) if key_type == "ec" else raw
@@ -564,13 +568,14 @@ def _pkcs11_signer(identity: Identity, password: str):
     key_id = bytes.fromhex(identity.key_id)
     key_type = _key_type(identity.certificate)
     try:
-        with pkcs11.Module(module_path, parameters) as module:
+        with _PKCS11_LOCK, pkcs11.Module(module_path, parameters) as module:
             slot = _find_slot(module, identity)
             with module.session(slot) as session:
                 token = module.token(slot)
+                # Con un lector con teclado, el PIN se escribe en él (None); si no, el que ha escrito quien firma.
+                pin = None if token.flags & pkcs11.CKF_PROTECTED_AUTHENTICATION_PATH and not password else password
                 if token.flags & pkcs11.CKF_LOGIN_REQUIRED and token.flags & pkcs11.CKF_USER_PIN_INITIALIZED:
-                    pinpad = bool(token.flags & pkcs11.CKF_PROTECTED_AUTHENTICATION_PATH)
-                    module.login(session, None if pinpad and not password else password)
+                    module.login(session, pin)
                 keys = module.find(session, pkcs11.CKO_PRIVATE_KEY, key_id)
                 if not keys:
                     raise CertificateError("el almacén no tiene la clave privada de este certificado")
@@ -580,8 +585,8 @@ def _pkcs11_signer(identity: Identity, password: str):
                 def sign_digest(digest: bytes, algorithm: str) -> bytes:
                     try:
                         if key_type == "rsa":
-                            return module.sign(session, keys[0], pkcs11.CKM_RSA_PKCS, DIGEST_INFO[algorithm] + digest)
-                        return _ec_der(module.sign(session, keys[0], pkcs11.CKM_ECDSA, digest))
+                            return module.sign(session, keys[0], pkcs11.CKM_RSA_PKCS, DIGEST_INFO[algorithm] + digest, pin)
+                        return _ec_der(module.sign(session, keys[0], pkcs11.CKM_ECDSA, digest, pin))
                     except pkcs11.Pkcs11Error as exc:
                         raise _pkcs11_error(exc, identity) from exc
 
@@ -603,12 +608,13 @@ def _find_slot(module, identity: Identity) -> int:
 def _pkcs11_error(exc, identity: Identity) -> BlackPdfError:
     from . import pkcs11
 
-    if exc.code in (pkcs11.CKR_PIN_INCORRECT, pkcs11.CKR_PIN_LEN_RANGE):
+    if exc.code in (pkcs11.CKR_PIN_INCORRECT, pkcs11.CKR_PIN_INVALID, pkcs11.CKR_PIN_LEN_RANGE):
         return CertificatePasswordError(str(exc), kind=identity.secret or "pin")
-    if exc.code == pkcs11.CKR_PIN_LOCKED:
+    if exc.code in (pkcs11.CKR_PIN_LOCKED, pkcs11.CKR_PIN_EXPIRED):
         return CertificateAccessError(str(exc), reason="pin_locked")
     if exc.code == pkcs11.CKR_FUNCTION_CANCELED:
         return CertificateAccessError(str(exc), reason="cancelled")
-    if exc.code in (pkcs11.CKR_TOKEN_NOT_PRESENT, pkcs11.CKR_DEVICE_REMOVED):
+    if exc.code in (pkcs11.CKR_TOKEN_NOT_PRESENT, pkcs11.CKR_DEVICE_REMOVED, pkcs11.CKR_TOKEN_NOT_RECOGNIZED,
+                    pkcs11.CKR_DEVICE_ERROR):
         return CertificateAccessError(str(exc), reason="no_card")
     return CertificateAccessError(str(exc), reason="unavailable")

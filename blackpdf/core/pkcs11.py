@@ -24,20 +24,26 @@ CKF_LOGIN_REQUIRED = 0x4
 CKF_USER_PIN_INITIALIZED = 0x8
 CKF_PROTECTED_AUTHENTICATION_PATH = 0x100
 CKU_USER = 1
+CKU_CONTEXT_SPECIFIC = 2
 CKO_CERTIFICATE = 0x1
 CKO_PRIVATE_KEY = 0x3
 CKA_CLASS = 0x0
 CKA_LABEL = 0x3
 CKA_VALUE = 0x11
 CKA_ID = 0x102
+CKA_ALWAYS_AUTHENTICATE = 0x202
 CKM_RSA_PKCS = 0x1
 CKM_ECDSA = 0x1041
 CKR_OK = 0x0
 CKR_CRYPTOKI_ALREADY_INITIALIZED = 0x191
 CKR_USER_ALREADY_LOGGED_IN = 0x100
 CKR_PIN_INCORRECT = 0xA0
-CKR_PIN_LOCKED = 0xA4
+CKR_PIN_INVALID = 0xA1
 CKR_PIN_LEN_RANGE = 0xA2
+CKR_PIN_EXPIRED = 0xA3
+CKR_PIN_LOCKED = 0xA4
+CKR_DEVICE_ERROR = 0x30
+CKR_TOKEN_NOT_RECOGNIZED = 0xE1
 CKR_FUNCTION_CANCELED = 0x50
 CKR_TOKEN_NOT_PRESENT = 0xE0
 CKR_DEVICE_REMOVED = 0x32
@@ -55,8 +61,8 @@ _FUNCTIONS = (
 )
 """Las primeras funciones de la tabla de PKCS#11, en su orden: no hacen falta las de después."""
 
-# En Windows las estructuras de PKCS#11 van empaquetadas a 1 byte; en Linux, con la alineación normal.
-_PACK = {"_pack_": 1} if sys.platform == "win32" else {}
+WINDOWS = sys.platform == "win32"
+"""En Windows las estructuras de PKCS#11 van empaquetadas a 1 byte; en Linux, con la alineación normal."""
 
 
 class _Version(ctypes.Structure):
@@ -64,35 +70,40 @@ class _Version(ctypes.Structure):
 
 
 class _InitArgs(ctypes.Structure):
+    if WINDOWS:
+        _pack_ = 1
     _fields_ = [("create_mutex", ctypes.c_void_p), ("destroy_mutex", ctypes.c_void_p),
                 ("lock_mutex", ctypes.c_void_p), ("unlock_mutex", ctypes.c_void_p),
                 ("flags", CK_ULONG), ("reserved", ctypes.c_char_p)]
-    locals().update(_PACK)
 
 
 class _TokenInfo(ctypes.Structure):
+    if WINDOWS:
+        _pack_ = 1
     _fields_ = [("label", ctypes.c_char * 32), ("manufacturer", ctypes.c_char * 32), ("model", ctypes.c_char * 16),
                 ("serial", ctypes.c_char * 16), ("flags", CK_ULONG), ("max_sessions", CK_ULONG),
                 ("sessions", CK_ULONG), ("max_rw_sessions", CK_ULONG), ("rw_sessions", CK_ULONG),
                 ("max_pin", CK_ULONG), ("min_pin", CK_ULONG), ("total_public", CK_ULONG), ("free_public", CK_ULONG),
                 ("total_private", CK_ULONG), ("free_private", CK_ULONG), ("hardware", _Version),
                 ("firmware", _Version), ("time", ctypes.c_char * 16)]
-    locals().update(_PACK)
 
 
 class _Attribute(ctypes.Structure):
+    if WINDOWS:
+        _pack_ = 1
     _fields_ = [("type", CK_ULONG), ("value", ctypes.c_void_p), ("length", CK_ULONG)]
-    locals().update(_PACK)
 
 
 class _Mechanism(ctypes.Structure):
+    if WINDOWS:
+        _pack_ = 1
     _fields_ = [("mechanism", CK_ULONG), ("parameter", ctypes.c_void_p), ("length", CK_ULONG)]
-    locals().update(_PACK)
 
 
 class _FunctionList(ctypes.Structure):
+    if WINDOWS:
+        _pack_ = 1
     _fields_ = [("version", _Version)] + [(name, ctypes.c_void_p) for name in _FUNCTIONS]
-    locals().update(_PACK)
 
 
 class Pkcs11Error(Exception):
@@ -123,8 +134,8 @@ class Module:
     """Un módulo PKCS#11 cargado e inicializado. Úsalo con ``with``: al salir se cierra."""
 
     def __init__(self, path: str, parameters: str = ""):
-        loader = ctypes.WinDLL if sys.platform == "win32" else ctypes.CDLL
-        self._library = loader(path)
+        # PKCS#11 usa la convención de C (cdecl) también en Windows.
+        self._library = ctypes.CDLL(path)
         get_list = self._library.C_GetFunctionList
         get_list.restype = CK_RV
         pointer = ctypes.POINTER(_FunctionList)()
@@ -132,8 +143,7 @@ class Module:
         if code != CKR_OK:
             raise Pkcs11Error("C_GetFunctionList", code)
         table = pointer.contents
-        prototype = ctypes.WINFUNCTYPE if sys.platform == "win32" else ctypes.CFUNCTYPE
-        self._calls = {name: prototype(CK_RV, *arguments)(getattr(table, name))
+        self._calls = {name: ctypes.CFUNCTYPE(CK_RV, *arguments)(getattr(table, name))
                        for name, arguments in _SIGNATURES.items()}
         args = _InitArgs(flags=CKF_OS_LOCKING_OK)
         # Los almacenes de NSS (Firefox, Chrome) reciben su carpeta por aquí.
@@ -162,11 +172,18 @@ class Module:
     # ---------- ranuras y sesiones ----------
     def slots(self) -> list[int]:
         """Ranuras con un almacén o una tarjeta dentro."""
-        count = CK_ULONG()
-        self.call("C_GetSlotList", 1, None, ctypes.byref(count))
-        found = (CK_ULONG * max(count.value, 1))()
-        self.call("C_GetSlotList", 1, found, ctypes.byref(count))
-        return list(found[:count.value])
+        for _attempt in range(3):
+            count = CK_ULONG()
+            self.call("C_GetSlotList", 1, None, ctypes.byref(count))
+            found = (CK_ULONG * (count.value + 4))()
+            count.value = len(found)
+            code = self._calls["C_GetSlotList"](1, found, ctypes.byref(count))
+            if code == CKR_OK:
+                return list(found[:count.value])
+            if code != CKR_BUFFER_TOO_SMALL:
+                raise Pkcs11Error("C_GetSlotList", code)
+            # Se ha conectado un lector justo ahora: se vuelve a contar.
+        raise Pkcs11Error("C_GetSlotList", CKR_BUFFER_TOO_SMALL)
 
     def token(self, slot: int) -> _TokenInfo:
         info = _TokenInfo()
@@ -182,10 +199,10 @@ class Module:
         finally:
             self._calls["C_CloseSession"](handle.value)
 
-    def login(self, session: int, pin: str | None) -> None:
+    def login(self, session: int, pin: str | None, user: int = CKU_USER) -> None:
         """Abre la sesión con el PIN o la contraseña. Con ``None``, el lector pide el PIN (teclado propio)."""
         data = pin.encode("utf-8") if pin is not None else None
-        code = self._calls["C_Login"](session, CKU_USER, data, len(data) if data is not None else 0)
+        code = self._calls["C_Login"](session, user, data, len(data) if data is not None else 0)
         if code not in (CKR_OK, CKR_USER_ALREADY_LOGGED_IN):
             raise Pkcs11Error("C_Login", code)
 
@@ -221,9 +238,19 @@ class Module:
         self.call("C_GetAttributeValue", session, handle, ctypes.byref(query), 1)
         return buffer.raw[:query.length]
 
-    def sign(self, session: int, key: int, mechanism: int, data: bytes) -> bytes:
+    def _always_authenticate(self, session: int, key: int) -> bool:
+        try:
+            return self.attribute(session, key, CKA_ALWAYS_AUTHENTICATE)[:1] == b"\x01"
+        except Pkcs11Error:
+            return False  # Módulos que no conocen el atributo: no lo piden.
+
+    def sign(self, session: int, key: int, mechanism: int, data: bytes, pin: str | None = None) -> bytes:
+        """Firma ``data`` con la clave. Las claves que piden el PIN en cada firma (las de firma de
+        algunas tarjetas, como el DNIe) lo reciben aquí."""
         mech = _Mechanism(mechanism, None, 0)
         self.call("C_SignInit", session, ctypes.byref(mech), key)
+        if self._always_authenticate(session, key):
+            self.login(session, pin, CKU_CONTEXT_SPECIFIC)
         source = (ctypes.c_ubyte * len(data)).from_buffer_copy(data)
         size = CK_ULONG(0)
         self.call("C_Sign", session, source, len(data), None, ctypes.byref(size))
