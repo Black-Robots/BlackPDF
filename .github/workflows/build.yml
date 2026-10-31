@@ -48,13 +48,15 @@ jobs:
         run: |
           python -m pytest tests/test_certstore.py tests/test_signatures.py -v -rA --tb=short *>&1 | Tee-Object -FilePath firma.log
           $code = $LASTEXITCODE
+          # Las últimas líneas también como aviso, se puedan leer sin iniciar sesión en GitHub: así se ve
+          # qué pruebas se han hecho de verdad y cuáles se han saltado.
+          $tail = (Get-Content firma.log -Tail 80) -join "`n"
+          $tail = $tail.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
           if ($code -ne 0) {
-            # Las últimas líneas también como aviso: se pueden leer sin iniciar sesión en GitHub.
-            $tail = (Get-Content firma.log -Tail 80) -join "`n"
-            $tail = $tail.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
             Write-Output "::error title=Pruebas de firma::$tail"
             exit $code
           }
+          Write-Output "::notice title=Pruebas de firma::$tail"
 
   windows:
     needs: [tests, firma-windows]
